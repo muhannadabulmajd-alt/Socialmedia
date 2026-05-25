@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Laheeb Coffee — Social Media Designer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+
+<!-- Brand fonts: uncomment and add font files to ./fonts/ to enable official typefaces -->
+<!--
+<style>
+@font-face{font-family:'itfGhroobArabic';src:url('./fonts/itfGhroobArabicLight.otf')format('opentype');font-weight:300;}
+@font-face{font-family:'itfGhroobArabic';src:url('./fonts/itfGhroobArabicMedium.otf')format('opentype');font-weight:400 700;}
+@font-face{font-family:'StyreneA';src:url('./fonts/StyreneALight.otf')format('opentype');font-weight:300 400;}
+@font-face{font-family:'StyreneA';src:url('./fonts/StyreneAMedium.otf')format('opentype');font-weight:500 700;}
+</style>
+-->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+<style>
+:root{
+  --c-linen:#EDEBD3;--c-sage:#798451;--c-grove:#3E4121;--c-amber:#A46331;
+  --c-cherry:#8D351D;--c-roast:#522C1C;--c-white:#FFFFFF;
+  --ui-bg:#1a1a1a;--ui-panel:#242424;--ui-border:#333;--ui-text:#e0e0e0;
+  --ui-muted:#888;--ui-accent:#798451;--ui-hover:#2e2e2e;
+  --sidebar-w:290px;--props-w:310px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Montserrat',sans-serif;background:var(--ui-bg);color:var(--ui-text);height:100vh;display:flex;flex-direction:column;overflow:hidden;font-size:13px;}
+
+/* HEADER */
+header{height:52px;background:var(--ui-panel);border-bottom:1px solid var(--ui-border);display:flex;align-items:center;padding:0 16px;gap:12px;flex-shrink:0;z-index:10;}
+.logo-text{font-size:15px;font-weight:700;color:var(--c-linen);letter-spacing:2px;text-transform:uppercase;}
+.logo-sub{font-size:10px;color:var(--ui-muted);letter-spacing:1px;text-transform:uppercase;}
+header .spacer{flex:1;}
+.btn-header{background:var(--ui-hover);border:1px solid var(--ui-border);color:var(--ui-text);padding:6px 12px;border-radius:4px;cursor:pointer;font-size:12px;font-family:'Montserrat',sans-serif;transition:.15s;}
+.btn-header:hover{background:var(--ui-accent);color:#fff;border-color:var(--ui-accent);}
+
+/* LAYOUT */
+#app{display:flex;flex:1;overflow:hidden;}
+
+/* SIDEBAR */
+#sidebar{width:var(--sidebar-w);background:var(--ui-panel);border-right:1px solid var(--ui-border);overflow-y:auto;flex-shrink:0;display:flex;flex-direction:column;}
+#sidebar::-webkit-scrollbar{width:4px;}
+#sidebar::-webkit-scrollbar-thumb{background:#444;border-radius:2px;}
+
+.section{border-bottom:1px solid var(--ui-border);}
+.section-head{padding:10px 14px;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--ui-muted);cursor:pointer;display:flex;align-items:center;justify-content:space-between;user-select:none;}
+.section-head:hover{color:var(--ui-text);}
+.section-head .arrow{transition:.2s;font-size:10px;}
+.section-head.open .arrow{transform:rotate(180deg);}
+.section-body{padding:10px 14px;display:none;}
+.section-body.open{display:block;}
+
+/* Canvas size selector */
+.size-opts{display:flex;gap:8px;}
+.size-opt{flex:1;padding:8px 6px;background:var(--ui-hover);border:1px solid var(--ui-border);border-radius:4px;cursor:pointer;text-align:center;transition:.15s;}
+.size-opt:hover{border-color:var(--ui-accent);}
+.size-opt.active{border-color:var(--ui-accent);background:#2a3018;}
+.size-opt .size-name{font-size:11px;font-weight:700;color:var(--ui-text);}
+.size-opt .size-dim{font-size:9px;color:var(--ui-muted);margin-top:2px;}
+.size-opt .size-icon{width:24px;height:auto;margin:0 auto 4px;display:block;}
+
+/* Background */
+.bg-swatches{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;}
+.swatch{width:28px;height:28px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:.15s;position:relative;}
+.swatch:hover,.swatch.active{border-color:#fff;transform:scale(1.1);}
+.swatch[data-hex="#FFFFFF"]{border-color:var(--ui-border);}
+.btn-upload{width:100%;padding:7px;background:var(--ui-hover);border:1px dashed var(--ui-border);border-radius:4px;color:var(--ui-text);cursor:pointer;font-size:11px;font-family:'Montserrat',sans-serif;transition:.15s;text-align:center;}
+.btn-upload:hover{border-color:var(--ui-accent);color:var(--c-linen);}
+.btn-remove-bg{width:100%;margin-top:6px;padding:6px;background:transparent;border:1px solid var(--c-cherry);border-radius:4px;color:var(--c-cherry);cursor:pointer;font-size:11px;font-family:'Montserrat',sans-serif;display:none;}
+.btn-remove-bg:hover{background:var(--c-cherry);color:#fff;}
+
+/* Add element buttons */
+.add-btns{display:flex;flex-direction:column;gap:6px;}
+.btn-add{padding:8px 12px;background:var(--ui-hover);border:1px solid var(--ui-border);border-radius:4px;color:var(--ui-text);cursor:pointer;font-size:12px;font-family:'Montserrat',sans-serif;text-align:left;transition:.15s;display:flex;align-items:center;gap:8px;}
+.btn-add:hover{background:var(--ui-accent);border-color:var(--ui-accent);color:#fff;}
+.btn-add .icon{font-size:14px;opacity:.7;}
+
+/* Layers */
+#layer-list{display:flex;flex-direction:column;gap:4px;min-height:30px;}
+.layer-item{display:flex;align-items:center;gap:6px;padding:6px 8px;background:var(--ui-hover);border:1px solid var(--ui-border);border-radius:4px;cursor:pointer;transition:.15s;}
+.layer-item:hover,.layer-item.active{border-color:var(--ui-accent);background:#2a3018;}
+.layer-item .li-name{flex:1;font-size:11px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;}
+.layer-item .li-del{background:none;border:none;color:var(--ui-muted);cursor:pointer;font-size:13px;padding:0 2px;line-height:1;transition:.15s;}
+.layer-item .li-del:hover{color:var(--c-cherry);}
+.layer-item .li-vis{background:none;border:none;color:var(--ui-muted);cursor:pointer;font-size:13px;padding:0 2px;line-height:1;}
+.layer-hint{font-size:11px;color:var(--ui-muted);text-align:center;padding:10px 0;}
+
+/* Export */
+.export-btns{display:flex;flex-direction:column;gap:6px;}
+.btn-export{padding:9px;border-radius:4px;cursor:pointer;font-size:12px;font-family:'Montserrat',sans-serif;font-weight:600;text-align:center;transition:.15s;border:none;}
+.btn-export.png{background:var(--c-sage);color:#fff;}
+.btn-export.png:hover{background:var(--c-grove);}
+.btn-export.jpg{background:var(--c-amber);color:#fff;}
+.btn-export.jpg:hover{background:#8a5028;}
+
+/* CANVAS AREA */
+#canvas-area{flex:1;display:flex;flex-direction:column;overflow:hidden;background:#111;}
+#canvas-wrapper{flex:1;overflow:auto;display:flex;align-items:flex-start;justify-content:center;padding:20px;position:relative;}
+#canvas-wrapper::-webkit-scrollbar{width:6px;height:6px;}
+#canvas-wrapper::-webkit-scrollbar-thumb{background:#444;border-radius:3px;}
+.canvas-inner{display:inline-block;box-shadow:0 0 40px rgba(0,0,0,.8);}
+#zoom-bar{height:44px;background:var(--ui-panel);border-top:1px solid var(--ui-border);display:flex;align-items:center;justify-content:center;gap:8px;flex-shrink:0;}
+.zoom-btn{background:var(--ui-hover);border:1px solid var(--ui-border);color:var(--ui-text);width:28px;height:28px;border-radius:4px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:.15s;}
+.zoom-btn:hover{background:var(--ui-accent);border-color:var(--ui-accent);}
+#zoom-label{font-size:12px;font-weight:600;color:var(--ui-muted);min-width:46px;text-align:center;}
+.zoom-fit{padding:0 12px;width:auto;font-size:11px;letter-spacing:.5px;}
+
+/* PROPERTIES PANEL */
+#props-panel{width:var(--props-w);background:var(--ui-panel);border-left:1px solid var(--ui-border);overflow-y:auto;flex-shrink:0;display:flex;flex-direction:column;}
+#props-panel::-webkit-scrollbar{width:4px;}
+#props-panel::-webkit-scrollbar-thumb{background:#444;border-radius:2px;}
+.props-header{padding:12px 14px 8px;border-bottom:1px solid var(--ui-border);display:flex;align-items:center;justify-content:space-between;}
+.props-title{font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--c-linen);}
+.props-close{background:none;border:none;color:var(--ui-muted);cursor:pointer;font-size:18px;line-height:1;padding:2px;}
+.props-close:hover{color:var(--ui-text);}
+.props-body{padding:12px 14px;flex:1;}
+
+/* Control rows */
+.ctrl-row{margin-bottom:12px;}
+.ctrl-label{font-size:10px;font-weight:600;color:var(--ui-muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px;}
+.ctrl-row textarea{width:100%;background:var(--ui-hover);border:1px solid var(--ui-border);color:var(--ui-text);padding:7px;border-radius:4px;font-size:13px;font-family:'Montserrat',sans-serif;resize:vertical;min-height:64px;outline:none;}
+.ctrl-row textarea:focus{border-color:var(--ui-accent);}
+.ctrl-row input[type=range]{width:100%;accent-color:var(--ui-accent);cursor:pointer;}
+.ctrl-row input[type=number]{width:72px;background:var(--ui-hover);border:1px solid var(--ui-border);color:var(--ui-text);padding:5px 7px;border-radius:4px;font-size:12px;font-family:'Montserrat',sans-serif;outline:none;}
+.ctrl-row input[type=number]:focus{border-color:var(--ui-accent);}
+.ctrl-row select{width:100%;background:var(--ui-hover);border:1px solid var(--ui-border);color:var(--ui-text);padding:6px 8px;border-radius:4px;font-size:12px;font-family:'Montserrat',sans-serif;outline:none;cursor:pointer;}
+.ctrl-row select:focus{border-color:var(--ui-accent);}
+.inline-ctrl{display:flex;align-items:center;gap:6px;}
+.inline-ctrl span{font-size:11px;color:var(--ui-muted);}
+
+.btn-group{display:flex;gap:4px;}
+.btn-toggle{flex:1;padding:6px 4px;background:var(--ui-hover);border:1px solid var(--ui-border);color:var(--ui-text);border-radius:4px;cursor:pointer;font-size:11px;font-family:'Montserrat',sans-serif;transition:.15s;text-align:center;}
+.btn-toggle:hover{border-color:var(--ui-accent);color:var(--c-linen);}
+.btn-toggle.active{background:var(--ui-accent);border-color:var(--ui-accent);color:#fff;}
+
+.props-swatches{display:flex;flex-wrap:wrap;gap:6px;}
+.props-swatch{width:26px;height:26px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:.15s;}
+.props-swatch:hover,.props-swatch.active{border-color:#fff;transform:scale(1.1);}
+.props-swatch[data-hex="#FFFFFF"]{border-color:var(--ui-border);}
+
+.pos-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.pos-field label{font-size:10px;color:var(--ui-muted);margin-bottom:3px;display:block;}
+.pos-field input{width:100%;}
+
+.divider{border:none;border-top:1px solid var(--ui-border);margin:12px 0;}
+.btn-danger{width:100%;padding:8px;background:transparent;border:1px solid var(--c-cherry);border-radius:4px;color:var(--c-cherry);cursor:pointer;font-size:12px;font-family:'Montserrat',sans-serif;transition:.15s;margin-top:4px;}
+.btn-danger:hover{background:var(--c-cherry);color:#fff;}
+.props-hint{flex:1;display:flex;align-items:center;justify-content:center;padding:20px;text-align:center;color:var(--ui-muted);font-size:12px;line-height:1.6;}
+
+#file-bg-input,#file-settings-input{display:none;}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="logo-text">Laheeb</div>
+    <div class="logo-sub">Social Media Designer</div>
+  </div>
+  <div class="spacer"></div>
+  <button class="btn-header" onclick="saveSettings()">⬇ Save Settings</button>
+  <button class="btn-header" onclick="document.getElementById('file-settings-input').click()">⬆ Load Settings</button>
+  <input type="file" id="file-settings-input" accept=".json" onchange="loadSettings(this)"/>
+</header>
+
+<div id="app">
+
+  <!-- LEFT SIDEBAR -->
+  <aside id="sidebar">
+
+    <!-- Canvas size -->
+    <div class="section">
+      <div class="section-head open" onclick="toggleSection(this)">Canvas Size <span class="arrow">▼</span></div>
+      <div class="section-body open">
+        <div class="size-opts">
+          <div class="size-opt active" id="opt-post" onclick="setDocSize('post')">
+            <svg class="size-icon" viewBox="0 0 24 32" fill="none"><rect x="1" y="1" width="22" height="30" rx="2" stroke="#798451" stroke-width="2"/></svg>
+            <div class="size-name">Post</div>
+            <div class="size-dim">1080 × 1440</div>
+          </div>
+          <div class="size-opt" id="opt-story" onclick="setDocSize('story')">
+            <svg class="size-icon" viewBox="0 0 18 32" fill="none"><rect x="1" y="1" width="16" height="30" rx="2" stroke="#798451" stroke-width="2"/></svg>
+            <div class="size-name">Story</div>
+            <div class="size-dim">1080 × 1920</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Background -->
+    <div class="section">
+      <div class="section-head open" onclick="toggleSection(this)">Background <span class="arrow">▼</span></div>
+      <div class="section-body open">
+        <div class="ctrl-label">Brand Color</div>
+        <div class="bg-swatches" id="bg-swatches"></div>
+        <button class="btn-upload" onclick="document.getElementById('file-bg-input').click()">↑ Upload Image</button>
+        <input type="file" id="file-bg-input" accept="image/*" onchange="setBgImage(this)"/>
+        <button class="btn-remove-bg" id="btn-remove-bg" onclick="removeBg()">✕ Remove Background Image</button>
+      </div>
+    </div>
+
+    <!-- Add elements -->
+    <div class="section">
+      <div class="section-head open" onclick="toggleSection(this)">Add Elements <span class="arrow">▼</span></div>
+      <div class="section-body open">
+        <div class="add-btns">
+          <button class="btn-add" onclick="addText('headline')"><span class="icon">T</span>Headline</button>
+          <button class="btn-add" onclick="addText('subline')"><span class="icon">t</span>Subline</button>
+          <button class="btn-add" onclick="addLogo('main')"><span class="icon">◆</span>Main Logo</button>
+          <button class="btn-add" onclick="addLogo('badge')"><span class="icon">◉</span>Sub Logo / Badge</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Layers -->
+    <div class="section">
+      <div class="section-head open" onclick="toggleSection(this)">Layers <span class="arrow">▼</span></div>
+      <div class="section-body open">
+        <div id="layer-list"><div class="layer-hint">No elements yet</div></div>
+      </div>
+    </div>
+
+    <!-- Export -->
+    <div class="section">
+      <div class="section-head open" onclick="toggleSection(this)">Export <span class="arrow">▼</span></div>
+      <div class="section-body open">
+        <div class="export-btns">
+          <button class="btn-export png" onclick="exportCanvas('png')">Export PNG — 300 DPI</button>
+          <button class="btn-export jpg" onclick="exportCanvas('jpeg')">Export JPEG — 300 DPI</button>
+        </div>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- CANVAS AREA -->
+  <main id="canvas-area">
+    <div id="canvas-wrapper">
+      <div class="canvas-inner" id="canvas-inner">
+        <canvas id="c"></canvas>
+      </div>
+    </div>
+    <div id="zoom-bar">
+      <button class="zoom-btn" title="Zoom Out" onclick="zoomStep(-1)">−</button>
+      <span id="zoom-label">50%</span>
+      <button class="zoom-btn" title="Zoom In" onclick="zoomStep(1)">+</button>
+      <button class="zoom-btn zoom-fit" title="Fit to Screen" onclick="fitToScreen()">Fit</button>
+    </div>
+  </main>
+
+  <!-- PROPERTIES PANEL -->
+  <aside id="props-panel">
+    <div id="props-hint" class="props-hint">Select an element<br/>to edit its properties</div>
+    <div id="props-content" style="display:none;flex-direction:column;flex:1;">
+      <div class="props-header">
+        <span class="props-title" id="props-type-label">Properties</span>
+        <button class="props-close" onclick="canvas.discardActiveObject();canvas.renderAll();" title="Close">✕</button>
+      </div>
+      <div class="props-body" id="props-body"></div>
+    </div>
+  </aside>
+
+</div>
+
+<script>
+// ─── BRAND DATA ──────────────────────────────────────────────────────────────
+const BRAND_COLORS=[
+  {name:'Washed Linen', hex:'#EDEBD3'},
+  {name:'Highland Sage',hex:'#798451'},
+  {name:'Deep Grove',   hex:'#3E4121'},
+  {name:'Roasted Amber',hex:'#A46331'},
+  {name:'Red Cherry',   hex:'#8D351D'},
+  {name:'Dark Roast',   hex:'#522C1C'},
+  {name:'White',        hex:'#FFFFFF'},
+];
+
+// Brand fonts — swap to 'itfGhroobArabic' / 'StyreneA' when font files are available
+const FONT_AR = 'Cairo';
+const FONT_EN = 'Montserrat';
+
+const SIZES = {
+  post:  {w:1080, h:1440, label:'post'},
+  story: {w:1080, h:1920, label:'story'},
+};
+
+// SVG logo path data from Laheeb label-tool
+const LOGO_CONFIGS = {
+  main:  { paths: ['diamond2','main','diamond1'], viewBox: '781.871 353.145 356.258 184.711', targetW: 380, label: 'Main Logo' },
+  badge: { paths: ['badge'],                      viewBox: '781.871 363.375 19.0 18.594',    targetW: 80,  label: 'Sub Logo'  },
+};
+const LOGO_VB = '781.871 353.145 356.258 184.711';
+const LOGO_PATHS = {
+  diamond1: `M 978.269531 516.453125 L 960.105469 498.289062 L 940.316406 518.074219 L 960.105469 537.855469 L 978.269531 519.6875 L 996.441406 537.855469 L 1016.21875 518.074219 L 996.441406 498.289062 Z`,
+  main:     `M 1036.820312 439.328125 C 1036.488281 439.734375 1033.53125 443.378906 1033.148438 443.167969 C 1024.421875 438.378906 1020.941406 431.550781 1019.578125 426.28125 C 1018.53125 422.15625 1018.191406 417.171875 1020.191406 413.273438 C 1021.859375 410.027344 1024.949219 407.617188 1028.511719 406.808594 C 1029.839844 406.507812 1031.191406 406.449219 1032.511719 406.597656 C 1036.148438 407.023438 1039.550781 409.082031 1041.570312 412.234375 C 1043.980469 415.976562 1044 420.402344 1043.328125 424.671875 C 1042.769531 428.257812 1041.570312 431.734375 1039.800781 434.910156 C 1038.929688 436.464844 1037.929688 437.941406 1036.820312 439.328125 M 1121.128906 353.144531 L 1121.128906 420.078125 L 1104.441406 420.097656 C 1084.410156 420.097656 1068.179688 436.332031 1068.179688 456.359375 L 1068.179688 465.449219 C 1062.890625 457.335938 1054.289062 450.945312 1040.679688 446.535156 C 1040.671875 446.527344 1040.671875 446.527344 1040.671875 446.519531 C 1048.71875 438.230469 1053.699219 426.941406 1053.699219 414.476562 L 1053.699219 413.964844 C 1053.699219 403.136719 1046.449219 393.273438 1035.871094 390.960938 C 1021.109375 387.734375 1008.078125 398.6875 1007.699219 412.789062 L 1007.671875 412.789062 L 1007.671875 448.167969 C 1001.96875 431.816406 986.433594 420.078125 968.140625 420.078125 L 950.039062 420.078125 L 950.039062 392.507812 L 940.886719 392.507812 L 940.886719 420.078125 L 940.882812 420.078125 L 940.882812 461.933594 C 940.882812 438.816406 922.140625 420.078125 899.023438 420.078125 L 811.355469 420.078125 C 800.230469 420.078125 791.210938 411.058594 791.210938 399.933594 L 791.210938 392.507812 L 781.871094 392.507812 L 781.871094 435.945312 C 781.871094 463.015625 803.816406 484.960938 830.886719 484.960938 L 948.292969 484.960938 L 948.292969 467.171875 C 948.90625 468.0625 949.554688 468.9375 950.238281 469.777344 C 950.238281 469.78125 950.238281 469.78125 950.238281 469.78125 C 956.746094 477.851562 966.183594 483.445312 976.925781 484.960938 L 1010.039062 484.960938 L 1010.011719 467.117188 C 1013.769531 481.136719 1022.839844 491.757812 1042.441406 498.222656 C 1062.738281 504.917969 1067.140625 519.1875 1067.988281 526.902344 C 1068.070312 527.703125 1068.121094 533.53125 1068.121094 533.53125 L 1075.96875 533.53125 L 1075.96875 507.003906 C 1075.96875 494.828125 1085.839844 484.960938 1098.019531 484.960938 L 1138.128906 484.960938 L 1138.128906 353.144531 Z`,
+  diamond2: `M 849.761719 518.050781 L 869.5625 537.855469 L 889.328125 518.089844 L 869.527344 498.285156 Z`,
+  badge:    `M 789.988281 372.222656 L 791.003906 372.222656 C 792.183594 372.222656 793.140625 371.824219 793.140625 370.867188 C 793.140625 370.023438 792.523438 369.460938 791.167969 369.460938 C 790.605469 369.460938 790.210938 369.515625 789.988281 369.570312 Z M 789.929688 377.460938 L 787.789062 377.460938 L 787.789062 368.222656 C 788.636719 368.050781 789.816406 367.9375 791.339844 367.9375 C 793.085938 367.9375 793.875 368.222656 794.550781 368.613281 C 795.058594 369.007812 795.449219 369.742188 795.449219 370.644531 C 795.449219 371.65625 794.660156 372.445312 793.535156 372.785156 L 793.535156 372.894531 C 794.4375 373.234375 794.945312 373.910156 795.226562 375.148438 C 795.507812 376.558594 795.675781 377.121094 795.902344 377.460938 L 793.59375 377.460938 C 793.3125 377.121094 793.140625 376.277344 792.859375 375.207031 C 792.6875 374.191406 792.125 373.742188 790.945312 373.742188 L 789.929688 373.742188 Z M 784.238281 372.617188 C 784.238281 376.726562 787.28125 379.996094 791.449219 379.996094 C 795.507812 379.996094 798.496094 376.726562 798.496094 372.671875 C 798.496094 368.558594 795.507812 365.234375 791.394531 365.234375 C 787.28125 365.234375 784.238281 368.558594 784.238281 372.617188 M 800.859375 372.617188 C 800.859375 377.855469 796.746094 381.96875 791.394531 381.96875 C 786.101562 381.96875 781.871094 377.855469 781.871094 372.617188 C 781.871094 367.488281 786.101562 363.375 791.394531 363.375 C 796.746094 363.375 800.859375 367.488281 800.859375 372.617188`,
+};
+
+// ─── STATE ───────────────────────────────────────────────────────────────────
+let canvas, currentSize = 'post', currentZoom = 0.5;
+let DOC_W = 1080, DOC_H = 1440;
+let bgImageLoaded = false;
+let elementCounter = 0;
+
+// ─── INIT ────────────────────────────────────────────────────────────────────
+document.fonts.ready.then(() => {
+  initCanvas();
+  buildBgSwatches();
+  fitToScreen();
+});
+
+function initCanvas() {
+  canvas = new fabric.Canvas('c', {
+    selection: true,
+    preserveObjectStacking: true,
+    backgroundColor: '#EDEBD3',
+  });
+  canvas.on('selection:created', onSelect);
+  canvas.on('selection:updated', onSelect);
+  canvas.on('selection:cleared', onDeselect);
+  canvas.on('object:modified', syncPropsFromObject);
+  canvas.on('object:scaling', syncPropsFromObject);
+  canvas.on('object:moving', syncPropsFromObject);
+
+  // Scroll-wheel zoom
+  document.getElementById('canvas-wrapper').addEventListener('wheel', e => {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? -1 : 1;
+    zoomStep(delta);
+  }, {passive: false});
+
+  setDocSize('post');
+}
+
+// ─── CANVAS SIZE ─────────────────────────────────────────────────────────────
+function setDocSize(size) {
+  currentSize = size;
+  DOC_W = SIZES[size].w;
+  DOC_H = SIZES[size].h;
+  document.getElementById('opt-post').classList.toggle('active', size === 'post');
+  document.getElementById('opt-story').classList.toggle('active', size === 'story');
+  canvas.setWidth(DOC_W);
+  canvas.setHeight(DOC_H);
+  canvas.renderAll();
+  fitToScreen();
+}
+
+// ─── ZOOM ────────────────────────────────────────────────────────────────────
+function fitToScreen() {
+  const wrapper = document.getElementById('canvas-wrapper');
+  const availW = wrapper.clientWidth - 40;
+  const availH = wrapper.clientHeight - 40;
+  const z = Math.min(availW / DOC_W, availH / DOC_H, 1);
+  applyZoom(z);
+}
+
+function zoomStep(dir) {
+  const steps = [0.1,0.15,0.2,0.25,0.33,0.4,0.5,0.6,0.67,0.75,1.0,1.25,1.5,2.0,3.0];
+  let idx = steps.findIndex(s => s >= currentZoom - 0.01);
+  if (idx === -1) idx = steps.length - 1;
+  const next = dir > 0 ? Math.min(idx + 1, steps.length - 1) : Math.max(idx - 1, 0);
+  applyZoom(steps[next]);
+}
+
+function applyZoom(z) {
+  currentZoom = Math.max(0.05, Math.min(3, z));
+  canvas.setDimensions({width: DOC_W * currentZoom, height: DOC_H * currentZoom});
+  canvas.setZoom(currentZoom);
+  canvas.renderAll();
+  document.getElementById('zoom-label').textContent = Math.round(currentZoom * 100) + '%';
+}
+
+// ─── BACKGROUND ──────────────────────────────────────────────────────────────
+function buildBgSwatches() {
+  const container = document.getElementById('bg-swatches');
+  BRAND_COLORS.forEach(c => {
+    const div = document.createElement('div');
+    div.className = 'swatch';
+    div.style.background = c.hex;
+    div.dataset.hex = c.hex;
+    div.title = c.name;
+    div.onclick = () => {
+      setBgColor(c.hex);
+      container.querySelectorAll('.swatch').forEach(s => s.classList.remove('active'));
+      div.classList.add('active');
+    };
+    container.appendChild(div);
+  });
+  // Default active
+  container.querySelector('[data-hex="#EDEBD3"]').classList.add('active');
+}
+
+function setBgColor(hex) {
+  canvas.setBackgroundImage(null, () => {});
+  canvas.backgroundColor = hex;
+  canvas.renderAll();
+  bgImageLoaded = false;
+  document.getElementById('btn-remove-bg').style.display = 'none';
+}
+
+function setBgImage(input) {
+  if (!input.files[0]) return;
+  const url = URL.createObjectURL(input.files[0]);
+  fabric.Image.fromURL(url, img => {
+    const scaleX = DOC_W / img.width;
+    const scaleY = DOC_H / img.height;
+    const scale = Math.max(scaleX, scaleY);
+    img.set({scaleX: scale, scaleY: scale, originX: 'left', originY: 'top', left: 0, top: 0});
+    canvas.setBackgroundImage(img, canvas.renderAll.bind(canvas));
+    bgImageLoaded = true;
+    document.getElementById('btn-remove-bg').style.display = 'block';
+  });
+  input.value = '';
+}
+
+function removeBg() {
+  canvas.setBackgroundImage(null, () => {});
+  canvas.backgroundColor = '#EDEBD3';
+  canvas.renderAll();
+  bgImageLoaded = false;
+  document.getElementById('btn-remove-bg').style.display = 'none';
+  const swatches = document.getElementById('bg-swatches');
+  swatches.querySelectorAll('.swatch').forEach(s => s.classList.remove('active'));
+  swatches.querySelector('[data-hex="#EDEBD3"]').classList.add('active');
+}
+
+// ─── ADD TEXT ─────────────────────────────────────────────────────────────────
+function addText(type) {
+  const isHeadline = type === 'headline';
+  const id = ++elementCounter;
+  const obj = new fabric.Textbox(isHeadline ? 'HEADLINE TEXT' : 'Subline text here', {
+    left: 80,
+    top: isHeadline ? 200 : 400,
+    width: DOC_W - 160,
+    fontSize: isHeadline ? 120 : 60,
+    fontFamily: FONT_EN,
+    fontWeight: isHeadline ? '700' : '400',
+    fill: '#3E4121',
+    textAlign: 'left',
+    direction: 'ltr',
+    lineHeight: 1.1,
+    laheebType: type,
+    laheebId: id,
+    laheebLabel: isHeadline ? 'Headline' : 'Subline',
+  });
+  canvas.add(obj);
+  canvas.setActiveObject(obj);
+  canvas.renderAll();
+  updateLayers();
+}
+
+// ─── ADD LOGO ─────────────────────────────────────────────────────────────────
+function buildLogoSVG(variant, fill) {
+  const cfg = LOGO_CONFIGS[variant];
+  const pathsStr = cfg.paths.map(k => `<path d="${LOGO_PATHS[k]}" fill="${fill}"/>`).join('');
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${cfg.viewBox}">${pathsStr}</svg>`;
+}
+
+function addLogo(variant) {
+  const cfg = LOGO_CONFIGS[variant];
+  const fill = '#3E4121';
+  const svgStr = buildLogoSVG(variant, fill);
+  const id = ++elementCounter;
+
+  fabric.loadSVGFromString(svgStr, (objects, options) => {
+    const group = fabric.util.groupSVGElements(objects, options);
+    group.scaleToWidth(cfg.targetW);
+    const bsX = group.scaleX;
+    group.set({
+      left: Math.round((DOC_W - group.getScaledWidth()) / 2),
+      top:  Math.round(DOC_H - group.getScaledHeight() - 100),
+      laheebType: 'logo',
+      laheebVariant: variant,
+      laheebId: id,
+      laheebLabel: cfg.label,
+      laheebColor: fill,
+      laheebBaseScaleX: bsX,
+    });
+    canvas.add(group);
+    canvas.setActiveObject(group);
+    canvas.renderAll();
+    updateLayers();
+  });
+}
+
+function setLogoColor(obj, hex) {
+  obj.laheebColor = hex;
+  // Walk group children recursively to update all paths
+  function applyFill(o) {
+    if (o.type === 'group') o.getObjects().forEach(applyFill);
+    else o.set('fill', hex);
+  }
+  applyFill(obj);
+  canvas.renderAll();
+}
+
+// ─── PROPERTIES PANEL ────────────────────────────────────────────────────────
+function onSelect(e) {
+  const obj = canvas.getActiveObject();
+  if (!obj) return onDeselect();
+  document.getElementById('props-hint').style.display = 'none';
+  const pc = document.getElementById('props-content');
+  pc.style.display = 'flex';
+
+  const type = obj.laheebType;
+  document.getElementById('props-type-label').textContent = obj.laheebLabel || 'Element';
+  // panel is always visible, no class needed
+
+  if (type === 'headline' || type === 'subline') renderTextProps(obj);
+  else if (type === 'logo') renderLogoProps(obj);
+  else renderGenericProps(obj);
+
+  updateLayers();
+}
+
+function onDeselect() {
+  document.getElementById('props-hint').style.display = 'flex';
+  document.getElementById('props-content').style.display = 'none';
+  updateLayers();
+}
+
+function syncPropsFromObject() {
+  const obj = canvas.getActiveObject();
+  if (!obj) return;
+  const type = obj.laheebType;
+  if (type === 'headline' || type === 'subline') {
+    const xIn = document.getElementById('p-x');
+    const yIn = document.getElementById('p-y');
+    if (xIn) xIn.value = Math.round(obj.left);
+    if (yIn) yIn.value = Math.round(obj.top);
+  } else if (type === 'logo') {
+    const xIn = document.getElementById('p-x');
+    const yIn = document.getElementById('p-y');
+    const sIn = document.getElementById('p-scale-num');
+    const sRange = document.getElementById('p-scale');
+    if (xIn) xIn.value = Math.round(obj.left);
+    if (yIn) yIn.value = Math.round(obj.top);
+    const base = obj.laheebBaseScaleX || 1;
+    const pct = Math.round((obj.scaleX / base) * 100);
+    if (sIn) sIn.value = pct;
+    if (sRange) sRange.value = pct;
+  }
+}
+
+function renderTextProps(obj) {
+  const body = document.getElementById('props-body');
+  body.innerHTML = `
+    <div class="ctrl-row">
+      <div class="ctrl-label">Text Content</div>
+      <textarea id="p-text" oninput="applyTextProp('text',this.value)">${obj.text||''}</textarea>
+    </div>
+    <div class="ctrl-row">
+      <div class="ctrl-label">Font</div>
+      <select id="p-font" onchange="applyTextProp('fontFamily',this.value)">
+        <option value="${FONT_EN}" ${obj.fontFamily===FONT_EN?'selected':''}>Latin — ${FONT_EN}</option>
+        <option value="${FONT_AR}" ${obj.fontFamily===FONT_AR?'selected':''}>Arabic — ${FONT_AR}</option>
+      </select>
+    </div>
+    <div class="ctrl-row">
+      <div class="ctrl-label">Weight</div>
+      <div class="btn-group">
+        <button class="btn-toggle ${obj.fontWeight==='300'||obj.fontWeight===300?'active':''}" onclick="applyTextProp('fontWeight','300');updateWeightBtns('300')">Light</button>
+        <button class="btn-toggle ${obj.fontWeight==='400'||obj.fontWeight===400?'active':''}" onclick="applyTextProp('fontWeight','400');updateWeightBtns('400')">Regular</button>
+        <button class="btn-toggle ${obj.fontWeight==='700'||obj.fontWeight===700?'active':''}" onclick="applyTextProp('fontWeight','700');updateWeightBtns('700')">Bold</button>
+      </div>
+    </div>
+    <div class="ctrl-row">
+      <div class="ctrl-label">Size</div>
+      <div class="inline-ctrl">
+        <input type="range" id="p-size" min="12" max="400" value="${obj.fontSize||60}" oninput="applyTextProp('fontSize',+this.value);document.getElementById('p-size-num').value=this.value" style="flex:1"/>
+        <input type="number" id="p-size-num" min="12" max="400" value="${obj.fontSize||60}" oninput="applyTextProp('fontSize',+this.value);document.getElementById('p-size').value=this.value" style="width:60px"/>
+      </div>
+    </div>
+    <div class="ctrl-row">
+      <div class="ctrl-label">Direction</div>
+      <div class="btn-group">
+        <button class="btn-toggle ${obj.direction!=='rtl'?'active':''}" id="btn-ltr" onclick="setTextDir('ltr')">LTR →</button>
+        <button class="btn-toggle ${obj.direction==='rtl'?'active':''}" id="btn-rtl" onclick="setTextDir('rtl')">← RTL</button>
+      </div>
+    </div>
+    <div class="ctrl-row">
+      <div class="ctrl-label">Alignment</div>
+      <div class="btn-group">
+        <button class="btn-toggle ${obj.textAlign==='left'?'active':''}" onclick="applyTextProp('textAlign','left');updateAlignBtns('left')">Left</button>
+        <button class="btn-toggle ${obj.textAlign==='center'?'active':''}" onclick="applyTextProp('textAlign','center');updateAlignBtns('center')">Center</button>
+        <button class="btn-toggle ${obj.textAlign==='right'?'active':''}" onclick="applyTextProp('textAlign','right');updateAlignBtns('right')">Right</button>
+      </div>
+    </div>
+    <div class="ctrl-row">
+      <div class="ctrl-label">Color</div>
+      <div class="props-swatches" id="p-color-swatches"></div>
+    </div>
+    <hr class="divider"/>
+    <div class="ctrl-row">
+      <div class="ctrl-label">Position</div>
+      <div class="pos-grid">
+        <div class="pos-field"><label>X</label><input type="number" id="p-x" value="${Math.round(obj.left||0)}" oninput="applyObjProp('left',+this.value)"/></div>
+        <div class="pos-field"><label>Y</label><input type="number" id="p-y" value="${Math.round(obj.top||0)}" oninput="applyObjProp('top',+this.value)"/></div>
+      </div>
+    </div>
+    <button class="btn-danger" onclick="deleteActive()">Delete Element</button>
+  `;
+  buildPropsSwatches('p-color-swatches', obj.fill, hex => applyTextProp('fill', hex));
+}
+
+function renderLogoProps(obj) {
+  // 100% = original added size (laheebBaseScaleX); fallback to scaleX=1
+  const base = obj.laheebBaseScaleX || obj.scaleX || 1;
+  const scalePct = Math.round((obj.scaleX / base) * 100);
+  const body = document.getElementById('props-body');
+  body.innerHTML = `
+    <div class="ctrl-row">
+      <div class="ctrl-label">Scale</div>
+      <div class="inline-ctrl">
+        <input type="range" id="p-scale" min="5" max="400" value="${scalePct}" oninput="applyLogoScale(+this.value);document.getElementById('p-scale-num').value=this.value" style="flex:1"/>
+        <input type="number" id="p-scale-num" min="5" max="400" value="${scalePct}" oninput="applyLogoScale(+this.value);document.getElementById('p-scale').value=this.value" style="width:60px"/>
+        <span>%</span>
+      </div>
+    </div>
+    <div class="ctrl-row">
+      <div class="ctrl-label">Color</div>
+      <div class="props-swatches" id="p-logo-color-swatches"></div>
+    </div>
+    <div class="ctrl-row">
+      <div class="ctrl-label">Opacity</div>
+      <div class="inline-ctrl">
+        <input type="range" id="p-opacity" min="0" max="100" value="${Math.round((obj.opacity||1)*100)}" oninput="applyObjProp('opacity',+this.value/100);document.getElementById('p-opacity-num').value=this.value" style="flex:1"/>
+        <input type="number" id="p-opacity-num" min="0" max="100" value="${Math.round((obj.opacity||1)*100)}" oninput="applyObjProp('opacity',+this.value/100);document.getElementById('p-opacity').value=this.value" style="width:55px"/>
+        <span>%</span>
+      </div>
+    </div>
+    <hr class="divider"/>
+    <div class="ctrl-row">
+      <div class="ctrl-label">Position</div>
+      <div class="pos-grid">
+        <div class="pos-field"><label>X</label><input type="number" id="p-x" value="${Math.round(obj.left||0)}" oninput="applyObjProp('left',+this.value)"/></div>
+        <div class="pos-field"><label>Y</label><input type="number" id="p-y" value="${Math.round(obj.top||0)}" oninput="applyObjProp('top',+this.value)"/></div>
+      </div>
+    </div>
+    <button class="btn-danger" onclick="deleteActive()">Delete Element</button>
+  `;
+  buildPropsSwatches('p-logo-color-swatches', obj.laheebColor || '#3E4121', hex => {
+    setLogoColor(canvas.getActiveObject(), hex);
+  });
+}
+
+function renderGenericProps(obj) {
+  document.getElementById('props-body').innerHTML = `
+    <div class="ctrl-row">
+      <div class="ctrl-label">Position</div>
+      <div class="pos-grid">
+        <div class="pos-field"><label>X</label><input type="number" id="p-x" value="${Math.round(obj.left||0)}" oninput="applyObjProp('left',+this.value)"/></div>
+        <div class="pos-field"><label>Y</label><input type="number" id="p-y" value="${Math.round(obj.top||0)}" oninput="applyObjProp('top',+this.value)"/></div>
+      </div>
+    </div>
+    <button class="btn-danger" onclick="deleteActive()">Delete Element</button>
+  `;
+}
+
+function buildPropsSwatches(containerId, currentColor, onPick) {
+  const c = document.getElementById(containerId);
+  if (!c) return;
+  BRAND_COLORS.forEach(col => {
+    const div = document.createElement('div');
+    div.className = 'props-swatch';
+    div.style.background = col.hex;
+    div.dataset.hex = col.hex;
+    div.title = col.name;
+    if (col.hex.toLowerCase() === (currentColor||'').toLowerCase()) div.classList.add('active');
+    div.onclick = () => {
+      c.querySelectorAll('.props-swatch').forEach(s => s.classList.remove('active'));
+      div.classList.add('active');
+      onPick(col.hex);
+    };
+    c.appendChild(div);
+  });
+}
+
+// ─── PROP HELPERS ────────────────────────────────────────────────────────────
+function applyTextProp(prop, val) {
+  const obj = canvas.getActiveObject();
+  if (!obj) return;
+  obj.set(prop, val);
+  canvas.renderAll();
+}
+
+function applyObjProp(prop, val) {
+  const obj = canvas.getActiveObject();
+  if (!obj) return;
+  obj.set(prop, val);
+  obj.setCoords();
+  canvas.renderAll();
+}
+
+function applyLogoScale(pct) {
+  const obj = canvas.getActiveObject();
+  if (!obj) return;
+  const base = obj.laheebBaseScaleX || 1;
+  const s = base * (pct / 100);
+  obj.set({scaleX: s, scaleY: s});
+  obj.setCoords();
+  canvas.renderAll();
+}
+
+function setTextDir(dir) {
+  const obj = canvas.getActiveObject();
+  if (!obj) return;
+  obj.set('direction', dir);
+  // Suggest matching alignment
+  if (dir === 'rtl' && obj.textAlign === 'left') obj.set('textAlign', 'right');
+  if (dir === 'ltr' && obj.textAlign === 'right') obj.set('textAlign', 'left');
+  canvas.renderAll();
+  // Update buttons
+  document.getElementById('btn-ltr')?.classList.toggle('active', dir !== 'rtl');
+  document.getElementById('btn-rtl')?.classList.toggle('active', dir === 'rtl');
+  updateAlignBtns(obj.textAlign);
+}
+
+function updateWeightBtns(w) {
+  document.querySelectorAll('#props-body .ctrl-row:nth-child(3) .btn-toggle').forEach(b => {
+    b.classList.toggle('active', b.textContent.toLowerCase().startsWith(
+      w==='300'?'li':w==='400'?'re':'bo'));
+  });
+}
+
+function updateAlignBtns(a) {
+  const btns = document.querySelectorAll('#props-body .btn-group');
+  // Find alignment btn-group (has left/center/right)
+  btns.forEach(grp => {
+    const bs = grp.querySelectorAll('.btn-toggle');
+    if (bs.length === 3 && bs[0].textContent.trim() === 'Left') {
+      bs.forEach(b => b.classList.toggle('active',
+        (b.textContent.trim()==='Left'&&a==='left')||
+        (b.textContent.trim()==='Center'&&a==='center')||
+        (b.textContent.trim()==='Right'&&a==='right')));
+    }
+  });
+}
+
+function deleteActive() {
+  const obj = canvas.getActiveObject();
+  if (!obj) return;
+  canvas.remove(obj);
+  canvas.discardActiveObject();
+  canvas.renderAll();
+  onDeselect();
+  updateLayers();
+}
+
+// ─── LAYERS ──────────────────────────────────────────────────────────────────
+function updateLayers() {
+  const list = document.getElementById('layer-list');
+  const objs = canvas.getObjects().slice().reverse();
+  const active = canvas.getActiveObject();
+  if (objs.length === 0) {
+    list.innerHTML = '<div class="layer-hint">No elements yet</div>';
+    return;
+  }
+  list.innerHTML = '';
+  objs.forEach(obj => {
+    const div = document.createElement('div');
+    div.className = 'layer-item' + (obj === active ? ' active' : '');
+    const label = obj.laheebLabel || obj.type || 'Object';
+    div.innerHTML = `
+      <span class="li-name" title="${label}">${label}</span>
+      <button class="li-del" onclick="removeById(${obj.laheebId})" title="Delete">✕</button>
+    `;
+    div.onclick = e => {
+      if (e.target.classList.contains('li-del')) return;
+      canvas.setActiveObject(obj);
+      canvas.renderAll();
+    };
+    list.appendChild(div);
+  });
+}
+
+function removeById(id) {
+  const obj = canvas.getObjects().find(o => o.laheebId === id);
+  if (!obj) return;
+  canvas.remove(obj);
+  if (canvas.getActiveObject() === obj) canvas.discardActiveObject();
+  canvas.renderAll();
+  updateLayers();
+  onDeselect();
+}
+
+// ─── EXPORT ──────────────────────────────────────────────────────────────────
+function exportCanvas(fmt) {
+  canvas.discardActiveObject();
+  canvas.renderAll();
+  const multiplier = 1 / currentZoom;
+  const dataURL = canvas.toDataURL({format: fmt === 'jpeg' ? 'jpeg' : 'png', quality: 0.95, multiplier});
+  const b64 = dataURL.split(',')[1];
+  const bytes = b64ToUint8Array(b64);
+  const patched = fmt === 'jpeg' ? patchJPEGdpi(bytes, 300) : patchPNGdpi(bytes, 300);
+  const mimeType = fmt === 'jpeg' ? 'image/jpeg' : 'image/png';
+  const ext = fmt === 'jpeg' ? 'jpg' : 'png';
+  saveAs(new Blob([patched], {type: mimeType}), `laheeb-${currentSize}-300dpi.${ext}`);
+}
+
+function b64ToUint8Array(b64) {
+  const bin = atob(b64);
+  const arr = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+  return arr;
+}
+
+// PNG DPI patch: insert pHYs chunk after IHDR (offset 33)
+function patchPNGdpi(bytes, dpi) {
+  const ppm = Math.round(dpi / 0.0254); // pixels per meter
+  const phys = new Uint8Array(21);
+  // length = 9
+  phys[3] = 9;
+  // type 'pHYs'
+  phys[4]=0x70;phys[5]=0x48;phys[6]=0x59;phys[7]=0x73;
+  // X density (big-endian uint32)
+  phys[8]=(ppm>>>24)&0xFF;phys[9]=(ppm>>>16)&0xFF;phys[10]=(ppm>>>8)&0xFF;phys[11]=ppm&0xFF;
+  // Y density
+  phys[12]=(ppm>>>24)&0xFF;phys[13]=(ppm>>>16)&0xFF;phys[14]=(ppm>>>8)&0xFF;phys[15]=ppm&0xFF;
+  // unit = 1 (metre)
+  phys[16]=1;
+  // CRC of type+data (9+4 = 13 bytes starting at phys[4])
+  const crcInput = phys.slice(4, 17);
+  const crcVal = crc32(crcInput);
+  phys[17]=(crcVal>>>24)&0xFF;phys[18]=(crcVal>>>16)&0xFF;phys[19]=(crcVal>>>8)&0xFF;phys[20]=crcVal&0xFF;
+
+  // PNG sig (8) + IHDR chunk (4+4+13+4 = 25) = 33 bytes before insertion point
+  const out = new Uint8Array(bytes.length + 21);
+  out.set(bytes.slice(0, 33));
+  out.set(phys, 33);
+  out.set(bytes.slice(33), 54);
+  return out;
+}
+
+// JPEG DPI patch: modify JFIF APP0 marker
+function patchJPEGdpi(bytes, dpi) {
+  const data = new Uint8Array(bytes);
+  // SOI=FFD8, APP0=FFE0, check JFIF signature at offset 6
+  if (data[0]===0xFF && data[1]===0xD8 && data[2]===0xFF && data[3]===0xE0 &&
+      data[6]===0x4A && data[7]===0x46 && data[8]===0x49 && data[9]===0x46) {
+    data[11] = 1; // units: 1 = DPI
+    data[12] = (dpi >> 8) & 0xFF;
+    data[13] = dpi & 0xFF;
+    data[14] = (dpi >> 8) & 0xFF;
+    data[15] = dpi & 0xFF;
+  }
+  return data;
+}
+
+// CRC32 for PNG chunk integrity
+const CRC_TABLE = (() => {
+  const t = new Uint32Array(256);
+  for (let n = 0; n < 256; n++) {
+    let c = n;
+    for (let k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+    t[n] = c;
+  }
+  return t;
+})();
+
+function crc32(data) {
+  let crc = 0xFFFFFFFF;
+  for (let i = 0; i < data.length; i++) crc = (crc >>> 8) ^ CRC_TABLE[(crc ^ data[i]) & 0xFF];
+  return (crc ^ 0xFFFFFFFF) >>> 0;
+}
+
+// ─── SAVE / LOAD ─────────────────────────────────────────────────────────────
+function saveSettings() {
+  const json = canvas.toJSON(['laheebType','laheebVariant','laheebId','laheebLabel','laheebColor','laheebBaseScaleX','direction','textAlign']);
+  const state = {
+    version: 1,
+    docSize: currentSize,
+    bgColor: canvas.backgroundColor,
+    canvas: json,
+    elementCounter,
+  };
+  saveAs(new Blob([JSON.stringify(state, null, 2)], {type:'application/json'}), 'laheeb-social-settings.json');
+}
+
+function loadSettings(input) {
+  if (!input.files[0]) return;
+  const fr = new FileReader();
+  fr.onload = ev => {
+    try {
+      const state = JSON.parse(ev.target.result);
+      if (state.docSize) setDocSize(state.docSize);
+      if (state.bgColor) canvas.backgroundColor = state.bgColor;
+      if (state.elementCounter) elementCounter = state.elementCounter;
+      canvas.loadFromJSON(state.canvas, () => {
+        canvas.renderAll();
+        updateLayers();
+      });
+    } catch(e) { alert('Could not load settings: ' + e.message); }
+  };
+  fr.readAsText(input.files[0]);
+  input.value = '';
+}
+
+// ─── ACCORDION ───────────────────────────────────────────────────────────────
+function toggleSection(head) {
+  head.classList.toggle('open');
+  const body = head.nextElementSibling;
+  body.classList.toggle('open');
+}
+</script>
+</body>
+</html>
