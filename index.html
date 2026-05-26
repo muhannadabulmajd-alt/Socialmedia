@@ -102,9 +102,27 @@ header .spacer{flex:1;}
 .btn-export.png:hover{background:var(--c-grove);}
 .btn-export.jpg{background:var(--c-amber);color:#fff;}
 .btn-export.jpg:hover{background:#8a5028;}
+.btn-export.all{background:var(--ui-hover);color:var(--ui-text);border:1px solid var(--ui-border);font-weight:500;}
+.btn-export.all:hover{background:var(--c-grove);color:#fff;border-color:var(--c-grove);}
 
 /* CANVAS AREA */
 #canvas-area{flex:1;display:flex;flex-direction:column;overflow:hidden;background:#111;}
+
+/* SLIDES STRIP */
+#slides-bar{height:74px;background:var(--ui-panel);border-bottom:1px solid var(--ui-border);display:flex;align-items:center;gap:8px;padding:0 12px;flex-shrink:0;overflow-x:auto;}
+#slides-bar::-webkit-scrollbar{height:5px;}
+#slides-bar::-webkit-scrollbar-thumb{background:#444;border-radius:3px;}
+#slides-strip{display:flex;gap:8px;align-items:center;}
+.slide-chip{position:relative;height:58px;border:2px solid var(--ui-border);border-radius:5px;background:#0d0d0d;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;overflow:hidden;transition:.15s;}
+.slide-chip:hover{border-color:var(--ui-muted);}
+.slide-chip.active{border-color:var(--ui-accent);}
+.slide-chip img{height:100%;width:100%;object-fit:contain;display:block;}
+.slide-chip .chip-num{position:absolute;bottom:2px;left:4px;font-size:9px;font-weight:700;color:#fff;text-shadow:0 0 3px #000;pointer-events:none;}
+.slide-chip .chip-del{position:absolute;top:1px;right:2px;width:15px;height:15px;border:none;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;font-size:11px;line-height:1;cursor:pointer;display:none;align-items:center;justify-content:center;padding:0;}
+.slide-chip:hover .chip-del{display:flex;}
+.slide-chip .chip-del:hover{background:var(--c-cherry);}
+#add-slide-btn{width:42px;height:58px;border:2px dashed var(--ui-border);border-radius:5px;background:transparent;color:var(--ui-muted);font-size:22px;cursor:pointer;flex-shrink:0;transition:.15s;}
+#add-slide-btn:hover{border-color:var(--ui-accent);color:var(--c-linen);}
 #canvas-wrapper{flex:1;overflow:auto;display:flex;align-items:flex-start;justify-content:center;padding:20px;position:relative;}
 #canvas-wrapper::-webkit-scrollbar{width:6px;height:6px;}
 #canvas-wrapper::-webkit-scrollbar-thumb{background:#444;border-radius:3px;}
@@ -183,9 +201,14 @@ header .spacer{flex:1;}
       <div class="section-head open" onclick="toggleSection(this)">Canvas Size <span class="arrow">▼</span></div>
       <div class="section-body open">
         <div class="size-opts">
-          <div class="size-opt active" id="opt-post" onclick="setDocSize('post')">
+          <div class="size-opt active" id="opt-feed4x5" onclick="setDocSize('feed4x5')">
+            <svg class="size-icon" viewBox="0 0 26 32" fill="none"><rect x="1" y="1" width="24" height="30" rx="2" stroke="#798451" stroke-width="2"/></svg>
+            <div class="size-name">Post 4:5</div>
+            <div class="size-dim">1080 × 1350</div>
+          </div>
+          <div class="size-opt" id="opt-post3x4" onclick="setDocSize('post3x4')">
             <svg class="size-icon" viewBox="0 0 24 32" fill="none"><rect x="1" y="1" width="22" height="30" rx="2" stroke="#798451" stroke-width="2"/></svg>
-            <div class="size-name">Post</div>
+            <div class="size-name">Post 3:4</div>
             <div class="size-dim">1080 × 1440</div>
           </div>
           <div class="size-opt" id="opt-story" onclick="setDocSize('story')">
@@ -216,8 +239,9 @@ header .spacer{flex:1;}
         <div class="add-btns">
           <button class="btn-add" onclick="addText('headline')"><span class="icon">T</span>Headline</button>
           <button class="btn-add" onclick="addText('subline')"><span class="icon">t</span>Subline</button>
-          <button class="btn-add" onclick="addLogo('main')"><span class="icon">◆</span>Main Logo</button>
-          <button class="btn-add" onclick="addLogo('badge')"><span class="icon">◉</span>Sub Logo / Badge</button>
+          <button class="btn-add" onclick="addMainWordmark()"><span class="icon">لهيب</span>Main Wordmark</button>
+          <button class="btn-add" onclick="addBilingualLockup()"><span class="icon">◳</span>Bilingual Lockup</button>
+          <button class="btn-add" onclick="addCircularEmblem()"><span class="icon">◉</span>Circular Emblem</button>
         </div>
       </div>
     </div>
@@ -234,9 +258,15 @@ header .spacer{flex:1;}
     <div class="section">
       <div class="section-head open" onclick="toggleSection(this)">Export <span class="arrow">▼</span></div>
       <div class="section-body open">
+        <div class="ctrl-label">Current slide</div>
         <div class="export-btns">
           <button class="btn-export png" onclick="exportCanvas('png')">Export PNG — 300 DPI</button>
           <button class="btn-export jpg" onclick="exportCanvas('jpeg')">Export JPEG — 300 DPI</button>
+        </div>
+        <div class="ctrl-label" style="margin-top:12px;">All slides (separate files)</div>
+        <div class="export-btns">
+          <button class="btn-export all" onclick="exportAllSlides('png')">⬇ Export All — PNG</button>
+          <button class="btn-export all" onclick="exportAllSlides('jpeg')">⬇ Export All — JPEG</button>
         </div>
       </div>
     </div>
@@ -245,6 +275,10 @@ header .spacer{flex:1;}
 
   <!-- CANVAS AREA -->
   <main id="canvas-area">
+    <div id="slides-bar">
+      <div id="slides-strip"></div>
+      <button id="add-slide-btn" title="Add slide" onclick="addSlide()">+</button>
+    </div>
     <div id="canvas-wrapper">
       <div class="canvas-inner" id="canvas-inner">
         <canvas id="c"></canvas>
@@ -289,15 +323,12 @@ const FONT_AR = 'itfGhroobArabic';
 const FONT_EN = 'StyreneA';
 
 const SIZES = {
-  post:  {w:1080, h:1440, label:'post'},
-  story: {w:1080, h:1920, label:'story'},
+  feed4x5: {w:1080, h:1350, label:'feed',  cat:'post',  name:'Post 4:5'},
+  post3x4: {w:1080, h:1440, label:'post',  cat:'post',  name:'Post 3:4'},
+  story:   {w:1080, h:1920, label:'story', cat:'story', name:'Story'},
 };
 
-// SVG logo path data from Laheeb label-tool
-const LOGO_CONFIGS = {
-  main:  { paths: ['diamond2','main','diamond1'], viewBox: '781.871 353.145 356.258 184.711', targetW: 380, label: 'Main Logo' },
-  badge: { paths: ['badge'],                      viewBox: '781.871 363.375 19.0 18.594',    targetW: 80,  label: 'Sub Logo'  },
-};
+// SVG logo path data from Laheeb label-tool / new brand assets
 const LOGO_VB = '781.871 353.145 356.258 184.711';
 const LOGO_PATHS = {
   diamond1: `M 978.269531 516.453125 L 960.105469 498.289062 L 940.316406 518.074219 L 960.105469 537.855469 L 978.269531 519.6875 L 996.441406 537.855469 L 1016.21875 518.074219 L 996.441406 498.289062 Z`,
@@ -307,10 +338,15 @@ const LOGO_PATHS = {
 };
 
 // ─── STATE ───────────────────────────────────────────────────────────────────
-let canvas, currentSize = 'post', currentZoom = 0.5;
-let DOC_W = 1080, DOC_H = 1440;
+let canvas, currentSize = 'feed4x5', currentZoom = 0.5;
+let DOC_W = 1080, DOC_H = 1350;
 let bgImageLoaded = false;
 let elementCounter = 0;
+
+// Carousel slides — each: { size, bgColor, json }
+let slides = [];
+let activeSlide = 0;
+const SLIDE_PROPS = ['laheebType','laheebVariant','laheebId','laheebLabel','laheebColor','laheebBaseScaleX','direction','textAlign'];
 
 // ─── INIT ────────────────────────────────────────────────────────────────────
 async function boot() {
@@ -337,7 +373,7 @@ function initCanvas() {
   canvas.on('selection:created', onSelect);
   canvas.on('selection:updated', onSelect);
   canvas.on('selection:cleared', onDeselect);
-  canvas.on('object:modified', syncPropsFromObject);
+  canvas.on('object:modified', () => { syncPropsFromObject(); renderSlidesStrip(); });
   canvas.on('object:scaling', syncPropsFromObject);
   canvas.on('object:moving', syncPropsFromObject);
 
@@ -348,20 +384,38 @@ function initCanvas() {
     zoomStep(delta);
   }, {passive: false});
 
-  setDocSize('post');
+  // First slide with default logos
+  slides = [{ size: 'feed4x5', bgColor: '#EDEBD3', json: null }];
+  activeSlide = 0;
+  setDocSize('feed4x5', {noLogoSwap: true});
+  applyDefaultLogos('post');
+  renderSlidesStrip();
 }
 
 // ─── CANVAS SIZE ─────────────────────────────────────────────────────────────
-function setDocSize(size) {
+function setDocSize(size, opts = {}) {
+  const prevCat = SIZES[currentSize] ? SIZES[currentSize].cat : null;
   currentSize = size;
   DOC_W = SIZES[size].w;
   DOC_H = SIZES[size].h;
-  document.getElementById('opt-post').classList.toggle('active', size === 'post');
-  document.getElementById('opt-story').classList.toggle('active', size === 'story');
+  ['feed4x5','post3x4','story'].forEach(s =>
+    document.getElementById('opt-' + s).classList.toggle('active', size === s));
+  if (slides[activeSlide]) slides[activeSlide].size = size;
   canvas.setWidth(DOC_W);
   canvas.setHeight(DOC_H);
   canvas.renderAll();
   fitToScreen();
+  // When the user crosses the post↔story boundary, swap to that format's default logos
+  const newCat = SIZES[size].cat;
+  if (!opts.noLogoSwap && prevCat && newCat !== prevCat) swapDefaultLogos(newCat);
+}
+
+function swapDefaultLogos(cat) {
+  canvas.getObjects().filter(o => o.laheebType === 'logo').forEach(o => canvas.remove(o));
+  onDeselect();
+  applyDefaultLogos(cat);
+  canvas.renderAll();
+  updateLayers();
 }
 
 // ─── ZOOM ────────────────────────────────────────────────────────────────────
@@ -468,38 +522,196 @@ function addText(type) {
   updateLayers();
 }
 
-// ─── ADD LOGO ─────────────────────────────────────────────────────────────────
-function buildLogoSVG(variant, fill) {
-  const cfg = LOGO_CONFIGS[variant];
-  const pathsStr = cfg.paths.map(k => `<path d="${LOGO_PATHS[k]}" fill="${fill}"/>`).join('');
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${cfg.viewBox}">${pathsStr}</svg>`;
+// ─── LOGOS (vector, recolorable) ──────────────────────────────────────────────
+const LOGO_FILL = '#3E4121';
+
+// Place + register a finished logo group on the canvas
+function placeLogo(group, variant, label, opts) {
+  group.scaleToWidth(opts.width);
+  const bsX = group.scaleX;
+  const sw = group.getScaledWidth(), sh = group.getScaledHeight();
+  let left, top;
+  if (opts.corner === 'bottom-right') { left = DOC_W - sw - opts.margin; top = DOC_H - sh - opts.margin; }
+  else if (opts.corner === 'bottom-left') { left = opts.margin; top = DOC_H - sh - opts.margin; }
+  else if (opts.corner === 'top-right') { left = DOC_W - sw - opts.margin; top = opts.margin; }
+  else if (opts.corner === 'top-left') { left = opts.margin; top = opts.margin; }
+  else if (opts.corner === 'center-upper') { left = (DOC_W - sw)/2; top = Math.round(DOC_H*0.30 - sh/2); }
+  else { left = (DOC_W - sw)/2; top = (DOC_H - sh)/2; }
+  group.set({
+    left: Math.round(left), top: Math.round(top),
+    laheebType: 'logo', laheebVariant: variant, laheebId: ++elementCounter,
+    laheebLabel: label, laheebColor: LOGO_FILL, laheebBaseScaleX: bsX,
+  });
+  canvas.add(group);
+  if (opts.select !== false) canvas.setActiveObject(group);
+  canvas.renderAll();
+  updateLayers();
 }
 
-function addLogo(variant) {
-  const cfg = LOGO_CONFIGS[variant];
-  const fill = '#3E4121';
-  const svgStr = buildLogoSVG(variant, fill);
-  const id = ++elementCounter;
-
-  fabric.loadSVGFromString(svgStr, (objects, options) => {
-    const group = fabric.util.groupSVGElements(objects, options);
-    group.scaleToWidth(cfg.targetW);
-    const bsX = group.scaleX;
-    group.set({
-      left: Math.round((DOC_W - group.getScaledWidth()) / 2),
-      top:  Math.round(DOC_H - group.getScaledHeight() - 100),
-      laheebType: 'logo',
-      laheebVariant: variant,
-      laheebId: id,
-      laheebLabel: cfg.label,
-      laheebColor: fill,
-      laheebBaseScaleX: bsX,
-    });
-    canvas.add(group);
-    canvas.setActiveObject(group);
-    canvas.renderAll();
-    updateLayers();
+// Main Arabic wordmark لهيب®  (mark + 3 diamonds + ® badge)
+function addMainWordmark(opts = {}) {
+  const o = Object.assign({ width: 300, margin: 64, corner: 'top-right' }, opts);
+  const keys = ['main','diamond1','diamond2','badge'];
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${LOGO_VB}">` +
+    keys.map(k => `<path d="${LOGO_PATHS[k]}" fill="${LOGO_FILL}"/>`).join('') + `</svg>`;
+  fabric.loadSVGFromString(svg, (objs, info) => {
+    const g = fabric.util.groupSVGElements(objs, info);
+    placeLogo(g, 'main', 'Main Wordmark', o);
   });
+}
+
+// Bilingual lockup — قهوة لهيب over LAHEEB COFFEE (brand fonts)
+function addBilingualLockup(opts = {}) {
+  const o = Object.assign({ width: 300, margin: 64, corner: 'top-left' }, opts);
+  const ar = new fabric.Text('قهوة لهيب', {
+    fontFamily: FONT_AR, fontWeight: 400, fontSize: 78, fill: LOGO_FILL,
+    direction: 'rtl', originX: 'center', originY: 'top', left: 0, top: 0,
+  });
+  const en = new fabric.Text('LAHEEB COFFEE', {
+    fontFamily: FONT_EN, fontWeight: 700, fontSize: 52, fill: LOGO_FILL,
+    charSpacing: 120, originX: 'center', originY: 'top', left: 0, top: ar.height + 14,
+  });
+  const g = new fabric.Group([ar, en], { subTargetCheck: false });
+  placeLogo(g, 'bilingual', 'Bilingual Lockup', o);
+}
+
+// Build glyphs of a string along a circular arc
+function arcChars(str, cx, cy, radius, startDeg, endDeg, fontSize, flip) {
+  const chars = [...str], n = chars.length, out = [];
+  for (let i = 0; i < n; i++) {
+    const t = n === 1 ? 0.5 : i / (n - 1);
+    const ang = startDeg + (endDeg - startDeg) * t;
+    const rad = ang * Math.PI / 180;
+    out.push(new fabric.Text(chars[i], {
+      left: cx + radius * Math.cos(rad),
+      top:  cy + radius * Math.sin(rad),
+      originX: 'center', originY: 'center',
+      fontFamily: FONT_EN, fontWeight: 700, fontSize, fill: LOGO_FILL,
+      charSpacing: 0, angle: flip ? ang - 90 : ang + 90,
+    }));
+  }
+  return out;
+}
+
+// Circular emblem — wordmark + diamonds + ® with LAHEEB arched top, COFFEE arched bottom
+function addCircularEmblem(opts = {}) {
+  const o = Object.assign({ width: 560, margin: 64, corner: 'center-upper' }, opts);
+  const keys = ['main','diamond1','diamond2','badge'];
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${LOGO_VB}">` +
+    keys.map(k => `<path d="${LOGO_PATHS[k]}" fill="${LOGO_FILL}"/>`).join('') + `</svg>`;
+  fabric.loadSVGFromString(svg, (objs, info) => {
+    const mark = fabric.util.groupSVGElements(objs, info);
+    const C = 300;                 // local centre
+    mark.scaleToWidth(300);
+    mark.set({ originX: 'center', originY: 'center', left: C, top: C });
+    const Rt = 232, Rb = 232, fs = 40;
+    const top = arcChars('LAHEEB', C, C, Rt, 212, 328, fs, false);
+    const bot = arcChars('COFFEE', C, C, Rb, 148, 32,  fs, true);
+    const g = new fabric.Group([mark, ...top, ...bot], { subTargetCheck: false });
+    placeLogo(g, 'circular', 'Circular Emblem', o);
+  });
+}
+
+// Auto-add the default logos for a new artwork
+function applyDefaultLogos(cat) {
+  if (cat === 'story') {
+    addCircularEmblem({ select: false });
+  } else {
+    addMainWordmark({ corner: 'bottom-right', select: false });
+    addBilingualLockup({ corner: 'bottom-left', select: false });
+  }
+}
+
+// ─── CAROUSEL SLIDES ──────────────────────────────────────────────────────────
+function makeThumb() {
+  try { return canvas.toDataURL({format: 'jpeg', quality: 0.5, multiplier: 130 / (DOC_W * currentZoom)}); }
+  catch (e) { return null; }
+}
+
+function captureActiveSlide() {
+  if (!slides[activeSlide]) return;
+  slides[activeSlide].json = canvas.toJSON(SLIDE_PROPS);
+  slides[activeSlide].size = currentSize;
+  slides[activeSlide].bgColor = canvas.backgroundColor;
+  slides[activeSlide].thumb = makeThumb();
+}
+
+function loadActiveSlide() {
+  const slide = slides[activeSlide];
+  onDeselect();
+  setDocSize(slide.size, {noLogoSwap: true});
+  const done = () => { updateLayers(); syncBgSwatch(); renderSlidesStrip(); };
+  if (slide.json) {
+    canvas.loadFromJSON(slide.json, () => {
+      canvas.backgroundColor = slide.json.background || slide.bgColor || '#EDEBD3';
+      canvas.renderAll(); done();
+    });
+  } else {
+    canvas.clear();
+    canvas.backgroundColor = slide.bgColor || '#EDEBD3';
+    canvas.renderAll(); done();
+  }
+}
+
+function switchSlide(i) {
+  if (i === activeSlide || i < 0 || i >= slides.length) return;
+  captureActiveSlide();
+  activeSlide = i;
+  loadActiveSlide();
+}
+
+function addSlide() {
+  captureActiveSlide();
+  const cat = SIZES[currentSize].cat;
+  slides.push({ size: currentSize, bgColor: '#EDEBD3', json: null });
+  activeSlide = slides.length - 1;
+  onDeselect();
+  setDocSize(currentSize, {noLogoSwap: true});
+  canvas.clear();
+  canvas.backgroundColor = '#EDEBD3';
+  canvas.renderAll();
+  syncBgSwatch();
+  applyDefaultLogos(cat);
+  renderSlidesStrip();
+}
+
+function deleteSlide(i) {
+  if (slides.length <= 1) return;
+  captureActiveSlide();
+  slides.splice(i, 1);
+  if (activeSlide > i) activeSlide--;
+  else if (activeSlide >= slides.length) activeSlide = slides.length - 1;
+  loadActiveSlide();
+}
+
+function renderSlidesStrip() {
+  const strip = document.getElementById('slides-strip');
+  if (!strip) return;
+  strip.innerHTML = '';
+  slides.forEach((s, i) => {
+    const sz = SIZES[s.size] || SIZES.feed4x5;
+    const chip = document.createElement('div');
+    chip.className = 'slide-chip' + (i === activeSlide ? ' active' : '');
+    chip.style.width = (58 * (sz.w / sz.h)) + 'px';
+    const thumb = (i === activeSlide) ? makeThumb() : s.thumb;
+    if (thumb) { const img = document.createElement('img'); img.src = thumb; chip.appendChild(img); }
+    const num = document.createElement('span'); num.className = 'chip-num'; num.textContent = i + 1; chip.appendChild(num);
+    const del = document.createElement('button'); del.className = 'chip-del'; del.textContent = '✕';
+    del.onclick = e => { e.stopPropagation(); deleteSlide(i); };
+    chip.appendChild(del);
+    chip.onclick = () => switchSlide(i);
+    strip.appendChild(chip);
+  });
+}
+
+function syncBgSwatch() {
+  const sw = document.getElementById('bg-swatches');
+  if (!sw) return;
+  sw.querySelectorAll('.swatch').forEach(s => s.classList.remove('active'));
+  const cur = (canvas.backgroundColor || '').toUpperCase();
+  const match = [...sw.querySelectorAll('.swatch')].find(s => s.dataset.hex.toUpperCase() === cur);
+  if (match) match.classList.add('active');
+  document.getElementById('btn-remove-bg').style.display = canvas.backgroundImage ? 'block' : 'none';
 }
 
 function setLogoColor(obj, hex) {
@@ -804,17 +1016,45 @@ function removeById(id) {
 }
 
 // ─── EXPORT ──────────────────────────────────────────────────────────────────
+function dataURLToBlob(dataURL, fmt) {
+  const bytes = b64ToUint8Array(dataURL.split(',')[1]);
+  const patched = fmt === 'jpeg' ? patchJPEGdpi(bytes, 300) : patchPNGdpi(bytes, 300);
+  return new Blob([patched], {type: fmt === 'jpeg' ? 'image/jpeg' : 'image/png'});
+}
+
 function exportCanvas(fmt) {
   canvas.discardActiveObject();
   canvas.renderAll();
-  const multiplier = 1 / currentZoom;
-  const dataURL = canvas.toDataURL({format: fmt === 'jpeg' ? 'jpeg' : 'png', quality: 0.95, multiplier});
-  const b64 = dataURL.split(',')[1];
-  const bytes = b64ToUint8Array(b64);
-  const patched = fmt === 'jpeg' ? patchJPEGdpi(bytes, 300) : patchPNGdpi(bytes, 300);
-  const mimeType = fmt === 'jpeg' ? 'image/jpeg' : 'image/png';
+  const dataURL = canvas.toDataURL({format: fmt === 'jpeg' ? 'jpeg' : 'png', quality: 0.95, multiplier: 1 / currentZoom});
   const ext = fmt === 'jpeg' ? 'jpg' : 'png';
-  saveAs(new Blob([patched], {type: mimeType}), `laheeb-${currentSize}-300dpi.${ext}`);
+  saveAs(dataURLToBlob(dataURL, fmt), `laheeb-${currentSize}-slide-${activeSlide + 1}-300dpi.${ext}`);
+}
+
+// Render one slide on an offscreen full-resolution canvas
+function renderSlideOffscreen(slide) {
+  return new Promise(resolve => {
+    const sz = SIZES[slide.size] || SIZES.feed4x5;
+    const sc = new fabric.StaticCanvas(document.createElement('canvas'),
+      {width: sz.w, height: sz.h, backgroundColor: slide.bgColor || '#EDEBD3'});
+    if (!slide.json) { sc.renderAll(); setTimeout(() => resolve(sc), 20); return; }
+    sc.loadFromJSON(slide.json, () => {
+      sc.backgroundColor = slide.json.background || slide.bgColor || '#EDEBD3';
+      sc.renderAll();
+      setTimeout(() => { sc.renderAll(); resolve(sc); }, 40);
+    });
+  });
+}
+
+async function exportAllSlides(fmt) {
+  captureActiveSlide();
+  const ext = fmt === 'jpeg' ? 'jpg' : 'png';
+  for (let i = 0; i < slides.length; i++) {
+    const sc = await renderSlideOffscreen(slides[i]);
+    const dataURL = sc.toDataURL({format: fmt === 'jpeg' ? 'jpeg' : 'png', quality: 0.95, multiplier: 1});
+    saveAs(dataURLToBlob(dataURL, fmt), `laheeb-${slides[i].size}-slide-${i + 1}-300dpi.${ext}`);
+    sc.dispose();
+    await new Promise(r => setTimeout(r, 450)); // space out separate downloads
+  }
 }
 
 function b64ToUint8Array(b64) {
@@ -885,15 +1125,14 @@ function crc32(data) {
 
 // ─── SAVE / LOAD ─────────────────────────────────────────────────────────────
 function saveSettings() {
-  const json = canvas.toJSON(['laheebType','laheebVariant','laheebId','laheebLabel','laheebColor','laheebBaseScaleX','direction','textAlign']);
+  captureActiveSlide();
   const state = {
-    version: 1,
-    docSize: currentSize,
-    bgColor: canvas.backgroundColor,
-    canvas: json,
+    version: 2,
+    activeSlide,
     elementCounter,
+    slides: slides.map(s => ({ size: s.size, bgColor: s.bgColor, json: s.json })),
   };
-  saveAs(new Blob([JSON.stringify(state, null, 2)], {type:'application/json'}), 'laheeb-social-settings.json');
+  saveAs(new Blob([JSON.stringify(state)], {type:'application/json'}), 'laheeb-carousel-settings.json');
 }
 
 function loadSettings(input) {
@@ -902,13 +1141,15 @@ function loadSettings(input) {
   fr.onload = ev => {
     try {
       const state = JSON.parse(ev.target.result);
-      if (state.docSize) setDocSize(state.docSize);
-      if (state.bgColor) canvas.backgroundColor = state.bgColor;
+      if (state.version === 2 && Array.isArray(state.slides)) {
+        slides = state.slides.map(s => ({ size: s.size || 'feed4x5', bgColor: s.bgColor || '#EDEBD3', json: s.json || null, thumb: null }));
+        activeSlide = Math.min(state.activeSlide || 0, slides.length - 1);
+      } else { // legacy v1 single-canvas file
+        slides = [{ size: state.docSize || 'feed4x5', bgColor: state.bgColor || '#EDEBD3', json: state.canvas || null, thumb: null }];
+        activeSlide = 0;
+      }
       if (state.elementCounter) elementCounter = state.elementCounter;
-      canvas.loadFromJSON(state.canvas, () => {
-        canvas.renderAll();
-        updateLayers();
-      });
+      loadActiveSlide();
     } catch(e) { alert('Could not load settings: ' + e.message); }
   };
   fr.readAsText(input.files[0]);
