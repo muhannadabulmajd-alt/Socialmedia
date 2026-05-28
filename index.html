@@ -582,11 +582,13 @@ function addMainWordmark(opts = {}) {
   });
 }
 
-// Scan actual ink bounds of a fabric.Text for pixel-accurate alignment
+// Scan actual ink bounds of a fabric.Text for pixel-accurate alignment.
+// enableRetinaScaling MUST be false: otherwise fabric renders at devicePixelRatio
+// (e.g. 2x on Mac) while getImageData reads 1x, corrupting the measured edges.
 function inkBounds(textObj) {
-  const pad = 20;
-  const w = Math.ceil(textObj.width + pad * 2) || 200;
-  const h = Math.ceil(textObj.height + pad * 2) || 120;
+  const pad = 30;
+  const w = Math.max(60, Math.ceil((textObj.width || 200) + pad * 2));
+  const h = Math.max(60, Math.ceil((textObj.height || 120) + pad * 2));
   const el = document.createElement('canvas');
   el.width = w; el.height = h;
   const copy = new fabric.Text(textObj.text, {
@@ -595,26 +597,26 @@ function inkBounds(textObj) {
     fontSize: textObj.fontSize,
     fill: '#000',
     direction: textObj.direction || 'ltr',
-    textAlign: textObj.textAlign || 'left',
     charSpacing: textObj.charSpacing || 0,
     originX: 'left', originY: 'top',
     left: pad, top: pad,
   });
-  const sc = new fabric.StaticCanvas(el, {width: w, height: h});
+  const sc = new fabric.StaticCanvas(el, { width: w, height: h, enableRetinaScaling: false, renderOnAddRemove: false });
   sc.add(copy);
   sc.renderAll();
-  const ctx = el.getContext('2d');
-  const data = ctx.getImageData(0, 0, w, h).data;
+  const data = el.getContext('2d').getImageData(0, 0, w, h).data;
   sc.dispose();
-  let minX = w, maxX = 0;
-  for (let i = 0; i < data.length; i += 4) {
-    if (data[i + 3] > 10) {
-      const x = (i / 4) % w;
-      if (x < minX) minX = x;
-      if (x > maxX) maxX = x;
+  let minX = w, maxX = -1;
+  for (let y = 0; y < h; y++) {
+    const row = y * w * 4;
+    for (let x = 0; x < w; x++) {
+      if (data[row + x * 4 + 3] > 10) {
+        if (x < minX) minX = x;
+        if (x > maxX) maxX = x;
+      }
     }
   }
-  if (minX > maxX) return { left: 0, right: Math.ceil(textObj.width) };
+  if (maxX < minX) return { left: 0, right: Math.ceil(textObj.width || 0) };
   return { left: minX - pad, right: maxX - pad };
 }
 
