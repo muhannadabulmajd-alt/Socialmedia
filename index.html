@@ -25,6 +25,7 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
 :root{
   --c-linen:#EDEBD3;--c-sage:#798451;--c-grove:#3E4121;--c-amber:#A46331;
@@ -104,6 +105,8 @@ header .spacer{flex:1;}
 .btn-export.jpg:hover{background:#8a5028;}
 .btn-export.all{background:var(--ui-hover);color:var(--ui-text);border:1px solid var(--ui-border);font-weight:500;}
 .btn-export.all:hover{background:var(--c-grove);color:#fff;border-color:var(--c-grove);}
+.btn-export.pdf{background:#5a2d1e;color:#fff;}
+.btn-export.pdf:hover{background:#7b3d2a;}
 
 /* CANVAS AREA */
 #canvas-area{flex:1;display:flex;flex-direction:column;overflow:hidden;background:#111;}
@@ -239,6 +242,7 @@ header .spacer{flex:1;}
         <div class="add-btns">
           <button class="btn-add" onclick="addText('headline')"><span class="icon">T</span>Headline</button>
           <button class="btn-add" onclick="addText('subline')"><span class="icon">t</span>Subline</button>
+          <label class="btn-add" style="cursor:pointer;"><span class="icon">⊞</span>Upload Image<input type="file" accept="image/*" style="display:none" onchange="addImageLayer(this)"/></label>
           <button class="btn-add" onclick="addMainWordmark()"><span class="icon">لهيب</span>Main Wordmark</button>
           <button class="btn-add" onclick="addBilingualLockup()"><span class="icon">◳</span>Bilingual Lockup</button>
           <button class="btn-add" onclick="addCircularEmblem()"><span class="icon">◉</span>Circular Emblem</button>
@@ -262,11 +266,13 @@ header .spacer{flex:1;}
         <div class="export-btns">
           <button class="btn-export png" onclick="exportCanvas('png')">Export PNG — 300 DPI</button>
           <button class="btn-export jpg" onclick="exportCanvas('jpeg')">Export JPEG — 300 DPI</button>
+          <button class="btn-export pdf" onclick="exportPDF()">Export PDF — 300 DPI</button>
         </div>
         <div class="ctrl-label" style="margin-top:12px;">All slides (separate files)</div>
         <div class="export-btns">
           <button class="btn-export all" onclick="exportAllSlides('png')">⬇ Export All — PNG</button>
           <button class="btn-export all" onclick="exportAllSlides('jpeg')">⬇ Export All — JPEG</button>
+          <button class="btn-export pdf" onclick="exportAllSlides('pdf')">⬇ Export All — PDF</button>
         </div>
       </div>
     </div>
@@ -346,7 +352,7 @@ let elementCounter = 0;
 // Carousel slides — each: { size, bgColor, json }
 let slides = [];
 let activeSlide = 0;
-const SLIDE_PROPS = ['laheebType','laheebVariant','laheebId','laheebLabel','laheebColor','laheebBaseScaleX','direction','textAlign'];
+const SLIDE_PROPS = ['laheebType','laheebVariant','laheebId','laheebLabel','laheebColor','laheebBaseScaleX','laheebAlignment','laheebWeight','direction','textAlign','flipX','flipY'];
 
 // ─── INIT ────────────────────────────────────────────────────────────────────
 async function boot() {
@@ -562,17 +568,48 @@ function addMainWordmark(opts = {}) {
 
 // Bilingual lockup — قهوة لهيب over LAHEEB COFFEE (brand fonts)
 function addBilingualLockup(opts = {}) {
-  const o = Object.assign({ width: 300, margin: 64, corner: 'top-left' }, opts);
+  const o = Object.assign({ width: 300, margin: 64, corner: 'top-left', align: 'center' }, opts);
+  const fill = o.color || LOGO_FILL;
+  const weight = o.weight || '700';
+  const align = o.align || 'center';
+  const ax = align; // 'left' | 'center' | 'right'
   const ar = new fabric.Text('قهوة لهيب', {
-    fontFamily: FONT_AR, fontWeight: 400, fontSize: 78, fill: LOGO_FILL,
-    direction: 'rtl', originX: 'center', originY: 'top', left: 0, top: 0,
+    fontFamily: FONT_AR, fontWeight: 400, fontSize: 78, fill,
+    direction: 'rtl', originX: ax, originY: 'top', left: 0, top: 0,
   });
   const en = new fabric.Text('LAHEEB COFFEE', {
-    fontFamily: FONT_EN, fontWeight: 700, fontSize: 52, fill: LOGO_FILL,
-    charSpacing: 120, originX: 'center', originY: 'top', left: 0, top: ar.height + 14,
+    fontFamily: FONT_EN, fontWeight: weight, fontSize: 52, fill,
+    charSpacing: 120, originX: ax, originY: 'top', left: 0, top: ar.height + 14,
   });
+  if (align === 'left') {
+    const maxW = Math.max(ar.width, en.width);
+    ar.set({ left: -maxW / 2 });
+    en.set({ left: -maxW / 2 });
+  } else if (align === 'right') {
+    const maxW = Math.max(ar.width, en.width);
+    ar.set({ left: maxW / 2 });
+    en.set({ left: maxW / 2 });
+  }
   const g = new fabric.Group([ar, en], { subTargetCheck: false });
-  placeLogo(g, 'bilingual', 'Bilingual Lockup', o);
+  g.laheebAlignment = align;
+  g.laheebWeight = weight;
+  if (o._restore) {
+    const r = o._restore;
+    g.set({
+      left: r.left, top: r.top, scaleX: r.scaleX, scaleY: r.scaleX,
+      opacity: r.opacity != null ? r.opacity : 1,
+      laheebType: 'logo', laheebVariant: 'bilingual', laheebId: r.id || ++elementCounter,
+      laheebLabel: 'Bilingual Lockup', laheebColor: fill, laheebBaseScaleX: r.baseScaleX,
+      laheebAlignment: align, laheebWeight: weight,
+    });
+    canvas.add(g);
+    canvas.setActiveObject(g);
+    canvas.renderAll();
+    updateLayers();
+    renderLogoProps(g);
+  } else {
+    placeLogo(g, 'bilingual', 'Bilingual Lockup', o);
+  }
 }
 
 // Build glyphs of a string along a circular arc
@@ -604,9 +641,9 @@ function addCircularEmblem(opts = {}) {
     const C = 300;                 // local centre
     mark.scaleToWidth(300);
     mark.set({ originX: 'center', originY: 'center', left: C, top: C });
-    const Rt = 232, Rb = 232, fs = 40;
-    const top = arcChars('LAHEEB', C, C, Rt, 212, 328, fs, false);
-    const bot = arcChars('COFFEE', C, C, Rb, 148, 32,  fs, true);
+    const Rt = 195, Rb = 195, fs = 26;
+    const top = arcChars('LAHEEB', C, C, Rt, 225, 315, fs, false);
+    const bot = arcChars('COFFEE', C, C, Rb, 135, 45,  fs, true);
     const g = new fabric.Group([mark, ...top, ...bot], { subTargetCheck: false });
     placeLogo(g, 'circular', 'Circular Emblem', o);
   });
@@ -739,6 +776,7 @@ function onSelect(e) {
 
   if (type === 'headline' || type === 'subline') renderTextProps(obj);
   else if (type === 'logo') renderLogoProps(obj);
+  else if (type === 'image-layer') renderImageLayerProps(obj);
   else renderGenericProps(obj);
 
   updateLayers();
@@ -835,9 +873,11 @@ function renderTextProps(obj) {
 }
 
 function renderLogoProps(obj) {
-  // 100% = original added size (laheebBaseScaleX); fallback to scaleX=1
   const base = obj.laheebBaseScaleX || obj.scaleX || 1;
   const scalePct = Math.round((obj.scaleX / base) * 100);
+  const isBilingual = obj.laheebVariant === 'bilingual';
+  const curAlign = obj.laheebAlignment || 'center';
+  const curWeight = obj.laheebWeight || '700';
   const body = document.getElementById('props-body');
   body.innerHTML = `
     <div class="ctrl-row">
@@ -848,6 +888,22 @@ function renderLogoProps(obj) {
         <span>%</span>
       </div>
     </div>
+    ${isBilingual ? `
+    <div class="ctrl-row">
+      <div class="ctrl-label">Alignment</div>
+      <div class="btn-group">
+        <button class="btn-toggle ${curAlign==='left'?'active':''}" onclick="rebuildBilingualAlignment('left')">Left</button>
+        <button class="btn-toggle ${curAlign==='center'?'active':''}" onclick="rebuildBilingualAlignment('center')">Center</button>
+        <button class="btn-toggle ${curAlign==='right'?'active':''}" onclick="rebuildBilingualAlignment('right')">Right</button>
+      </div>
+    </div>
+    <div class="ctrl-row">
+      <div class="ctrl-label">Weight</div>
+      <div class="btn-group">
+        <button class="btn-toggle ${curWeight==='300'?'active':''}" onclick="setBilingualWeight('300')">Light</button>
+        <button class="btn-toggle ${curWeight==='700'?'active':''}" onclick="setBilingualWeight('700')">Bold</button>
+      </div>
+    </div>` : ''}
     <div class="ctrl-row">
       <div class="ctrl-label">Color</div>
       <div class="props-swatches" id="p-logo-color-swatches"></div>
@@ -1015,6 +1071,91 @@ function removeById(id) {
   onDeselect();
 }
 
+// ─── IMAGE LAYER ─────────────────────────────────────────────────────────────
+function addImageLayer(input) {
+  if (!input.files[0]) return;
+  const url = URL.createObjectURL(input.files[0]);
+  fabric.Image.fromURL(url, img => {
+    const scale = Math.min((DOC_W * 0.8) / img.width, (DOC_H * 0.8) / img.height);
+    img.set({
+      scaleX: scale, scaleY: scale,
+      left: DOC_W / 2, top: DOC_H / 2,
+      originX: 'center', originY: 'center',
+      laheebType: 'image-layer',
+      laheebId: ++elementCounter,
+      laheebLabel: 'Image',
+    });
+    canvas.add(img);
+    canvas.setActiveObject(img);
+    canvas.renderAll();
+    updateLayers();
+  });
+  input.value = '';
+}
+
+function renderImageLayerProps(obj) {
+  const body = document.getElementById('props-body');
+  body.innerHTML = `
+    <div class="ctrl-row">
+      <div class="ctrl-label">Opacity</div>
+      <div class="inline-ctrl">
+        <input type="range" id="p-opacity" min="0" max="100" value="${Math.round((obj.opacity||1)*100)}" oninput="applyObjProp('opacity',+this.value/100);document.getElementById('p-opacity-num').value=this.value" style="flex:1"/>
+        <input type="number" id="p-opacity-num" min="0" max="100" value="${Math.round((obj.opacity||1)*100)}" oninput="applyObjProp('opacity',+this.value/100);document.getElementById('p-opacity').value=this.value" style="width:55px"/>
+        <span>%</span>
+      </div>
+    </div>
+    <div class="ctrl-row">
+      <div class="ctrl-label">Flip</div>
+      <div class="btn-group">
+        <button class="btn-toggle ${obj.flipX?'active':''}" onclick="toggleFlip('flipX')">Flip H</button>
+        <button class="btn-toggle ${obj.flipY?'active':''}" onclick="toggleFlip('flipY')">Flip V</button>
+      </div>
+    </div>
+    <hr class="divider"/>
+    <div class="ctrl-row">
+      <div class="ctrl-label">Position</div>
+      <div class="pos-grid">
+        <div class="pos-field"><label>X</label><input type="number" id="p-x" value="${Math.round(obj.left||0)}" oninput="applyObjProp('left',+this.value)"/></div>
+        <div class="pos-field"><label>Y</label><input type="number" id="p-y" value="${Math.round(obj.top||0)}" oninput="applyObjProp('top',+this.value)"/></div>
+      </div>
+    </div>
+    <button class="btn-danger" onclick="deleteActive()">Delete Element</button>
+  `;
+}
+
+function toggleFlip(axis) {
+  const obj = canvas.getActiveObject();
+  if (!obj) return;
+  obj.set(axis, !obj[axis]);
+  canvas.renderAll();
+  renderImageLayerProps(obj);
+}
+
+// ─── BILINGUAL LOCKUP HELPERS ─────────────────────────────────────────────────
+function rebuildBilingualAlignment(align) {
+  const obj = canvas.getActiveObject();
+  if (!obj || obj.laheebVariant !== 'bilingual') return;
+  addBilingualLockup({
+    align,
+    color: obj.laheebColor || LOGO_FILL,
+    weight: obj.laheebWeight || '700',
+    _restore: {
+      left: obj.left, top: obj.top, scaleX: obj.scaleX,
+      baseScaleX: obj.laheebBaseScaleX, opacity: obj.opacity, id: obj.laheebId,
+    },
+  });
+  canvas.remove(obj);
+}
+
+function setBilingualWeight(weight) {
+  const obj = canvas.getActiveObject();
+  if (!obj || obj.laheebVariant !== 'bilingual') return;
+  obj.getObjects().forEach(child => child.set('fontWeight', weight));
+  obj.laheebWeight = weight;
+  canvas.renderAll();
+  renderLogoProps(obj);
+}
+
 // ─── EXPORT ──────────────────────────────────────────────────────────────────
 function dataURLToBlob(dataURL, fmt) {
   const bytes = b64ToUint8Array(dataURL.split(',')[1]);
@@ -1047,14 +1188,36 @@ function renderSlideOffscreen(slide) {
 
 async function exportAllSlides(fmt) {
   captureActiveSlide();
-  const ext = fmt === 'jpeg' ? 'jpg' : 'png';
   for (let i = 0; i < slides.length; i++) {
     const sc = await renderSlideOffscreen(slides[i]);
-    const dataURL = sc.toDataURL({format: fmt === 'jpeg' ? 'jpeg' : 'png', quality: 0.95, multiplier: 1});
-    saveAs(dataURLToBlob(dataURL, fmt), `laheeb-${slides[i].size}-slide-${i + 1}-300dpi.${ext}`);
+    if (fmt === 'pdf') {
+      const sz = SIZES[slides[i].size] || SIZES.feed4x5;
+      const dataURL = sc.toDataURL({format: 'png', quality: 1, multiplier: 1});
+      const w = sz.w / 300 * 72, h = sz.h / 300 * 72;
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ orientation: h > w ? 'p' : 'l', unit: 'pt', format: [w, h] });
+      doc.addImage(dataURL, 'PNG', 0, 0, w, h);
+      doc.save(`laheeb-${slides[i].size}-slide-${i + 1}.pdf`);
+    } else {
+      const ext = fmt === 'jpeg' ? 'jpg' : 'png';
+      const dataURL = sc.toDataURL({format: fmt === 'jpeg' ? 'jpeg' : 'png', quality: 0.95, multiplier: 1});
+      saveAs(dataURLToBlob(dataURL, fmt), `laheeb-${slides[i].size}-slide-${i + 1}-300dpi.${ext}`);
+    }
     sc.dispose();
-    await new Promise(r => setTimeout(r, 450)); // space out separate downloads
+    await new Promise(r => setTimeout(r, 450));
   }
+}
+
+function exportPDF() {
+  canvas.discardActiveObject();
+  canvas.renderAll();
+  const dataURL = canvas.toDataURL({format: 'png', quality: 1, multiplier: 1 / currentZoom});
+  const w = DOC_W / 300 * 72;
+  const h = DOC_H / 300 * 72;
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: h > w ? 'p' : 'l', unit: 'pt', format: [w, h] });
+  doc.addImage(dataURL, 'PNG', 0, 0, w, h);
+  doc.save(`laheeb-${currentSize}-slide-${activeSlide + 1}.pdf`);
 }
 
 function b64ToUint8Array(b64) {
