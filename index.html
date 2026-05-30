@@ -2,7 +2,7 @@
 <html lang="en" dir="ltr">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover"/>
 <title>Laheeb Coffee — Social Media Designer</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
@@ -179,6 +179,122 @@ header .spacer{flex:1;}
 .props-hint{flex:1;display:flex;align-items:center;justify-content:center;padding:20px;text-align:center;color:var(--ui-muted);font-size:12px;line-height:1.6;}
 
 #file-bg-input,#file-settings-input{display:none;}
+
+/* Mobile-only elements — hidden on desktop */
+#mobile-nav{display:none;}
+#mobile-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.48);z-index:190;}
+#mobile-backdrop.visible{display:block;}
+.drawer-handle{display:none;width:40px;height:4px;background:var(--ui-border);border-radius:2px;margin:10px auto 6px;flex-shrink:0;}
+
+@media(max-width:768px){
+  body{font-size:15px;overflow:hidden;}
+
+  header{padding:0 12px;gap:8px;}
+  header .logo-sub{display:none;}
+  .btn-header{font-size:13px;padding:8px 10px;min-height:44px;}
+
+  #sidebar{
+    position:fixed;bottom:0;left:0;right:0;
+    width:100%!important;
+    max-height:70vh;
+    transform:translateY(calc(100% + 1px));
+    transition:transform 0.28s cubic-bezier(0.4,0,0.2,1);
+    z-index:200;
+    border-radius:16px 16px 0 0;
+    border-right:none;
+    border-top:1px solid var(--ui-border);
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+    padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  #sidebar.drawer-open{transform:translateY(0);}
+
+  #props-panel{
+    position:fixed;bottom:0;left:0;right:0;
+    width:100%!important;
+    max-height:70vh;
+    transform:translateY(calc(100% + 1px));
+    transition:transform 0.28s cubic-bezier(0.4,0,0.2,1);
+    z-index:200;
+    border-radius:16px 16px 0 0;
+    border-left:none;
+    border-top:1px solid var(--ui-border);
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+    padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  #props-panel.drawer-open{transform:translateY(0);}
+
+  .drawer-handle{display:block;}
+
+  #canvas-area{width:100vw;flex:1 1 100%;}
+
+  #slides-bar{height:62px;padding:0 8px;}
+  .slide-chip{height:50px;}
+  .slide-chip .chip-del{display:flex!important;width:20px;height:20px;font-size:12px;opacity:0.85;}
+  #add-slide-btn{height:50px;}
+
+  #canvas-wrapper{padding:10px;padding-bottom:calc(62px + env(safe-area-inset-bottom,0px));}
+
+  #zoom-bar{height:44px;padding:0 12px;justify-content:space-between;}
+  .zoom-btn{width:44px;height:44px;font-size:18px;}
+  .zoom-fit{padding:0 14px;font-size:13px;}
+  #zoom-label{font-size:13px;min-width:48px;text-align:center;}
+
+  #mobile-nav{
+    display:flex;
+    position:fixed;bottom:0;left:0;right:0;
+    height:calc(56px + env(safe-area-inset-bottom,0px));
+    padding-bottom:env(safe-area-inset-bottom,0px);
+    background:var(--ui-panel);
+    border-top:1px solid var(--ui-border);
+    z-index:210;
+    align-items:stretch;
+    justify-content:space-around;
+  }
+  .mnav-btn{
+    flex:1;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:2px;
+    background:none;border:none;color:var(--ui-muted);
+    cursor:pointer;min-height:44px;padding:4px 2px;
+    font-family:'Montserrat',sans-serif;
+    transition:color 0.15s;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .mnav-btn:active,.mnav-btn.active{color:var(--ui-accent);}
+  .mnav-icon{font-size:20px;line-height:1;}
+  .mnav-btn small{font-size:10px;letter-spacing:0.3px;text-transform:uppercase;}
+
+  .section-head{padding:14px 16px;font-size:12px;min-height:44px;}
+  .section-body{padding:10px 14px;}
+
+  .btn-add{min-height:44px;padding:10px 14px;font-size:13px;}
+  .btn-upload{min-height:44px;padding:10px;font-size:13px;}
+  .btn-remove-bg{min-height:40px;padding:10px;font-size:13px;}
+
+  .swatch{width:34px;height:34px;}
+
+  .layer-item{padding:10px;min-height:44px;}
+  .layer-item .li-name{font-size:13px;}
+  .layer-item .li-del{font-size:16px;padding:4px 6px;opacity:0.8;}
+
+  .btn-export{min-height:44px;font-size:13px;padding:12px;}
+
+  .ctrl-row input[type=number],.ctrl-row select,.ctrl-row textarea{font-size:16px;}
+  .ctrl-row input[type=range]{height:32px;}
+  .ctrl-label{font-size:11px;}
+  .btn-toggle{min-height:44px;padding:8px 6px;font-size:12px;}
+  .btn-danger{min-height:44px;padding:12px;font-size:13px;}
+
+  .props-header{padding:14px 16px 10px;}
+  .props-close{min-width:44px;min-height:44px;font-size:22px;display:flex;align-items:center;justify-content:center;}
+  .props-body{padding:12px 16px;}
+  .props-swatch{width:32px;height:32px;}
+
+  .size-opt{padding:10px 6px;min-height:60px;}
+  .size-opt .size-name{font-size:12px;}
+  .size-opt .size-dim{font-size:10px;}
+}
 </style>
 </head>
 <body>
@@ -198,9 +314,10 @@ header .spacer{flex:1;}
 
   <!-- LEFT SIDEBAR -->
   <aside id="sidebar">
+    <div class="drawer-handle" aria-hidden="true"></div>
 
     <!-- Canvas size -->
-    <div class="section">
+    <div class="section" id="sec-size">
       <div class="section-head open" onclick="toggleSection(this)">Canvas Size <span class="arrow">▼</span></div>
       <div class="section-body open">
         <div class="size-opts">
@@ -224,7 +341,7 @@ header .spacer{flex:1;}
     </div>
 
     <!-- Background -->
-    <div class="section">
+    <div class="section" id="sec-bg">
       <div class="section-head open" onclick="toggleSection(this)">Background <span class="arrow">▼</span></div>
       <div class="section-body open">
         <div class="ctrl-label">Brand Color</div>
@@ -236,7 +353,7 @@ header .spacer{flex:1;}
     </div>
 
     <!-- Add elements -->
-    <div class="section">
+    <div class="section" id="sec-elements">
       <div class="section-head open" onclick="toggleSection(this)">Add Elements <span class="arrow">▼</span></div>
       <div class="section-body open">
         <div class="add-btns">
@@ -251,7 +368,7 @@ header .spacer{flex:1;}
     </div>
 
     <!-- Layers -->
-    <div class="section">
+    <div class="section" id="sec-layers">
       <div class="section-head open" onclick="toggleSection(this)">Layers <span class="arrow">▼</span></div>
       <div class="section-body open">
         <div id="layer-list"><div class="layer-hint">No elements yet</div></div>
@@ -259,7 +376,7 @@ header .spacer{flex:1;}
     </div>
 
     <!-- Export -->
-    <div class="section">
+    <div class="section" id="sec-export">
       <div class="section-head open" onclick="toggleSection(this)">Export <span class="arrow">▼</span></div>
       <div class="section-body open">
         <div class="ctrl-label">Current slide</div>
@@ -300,6 +417,7 @@ header .spacer{flex:1;}
 
   <!-- PROPERTIES PANEL -->
   <aside id="props-panel">
+    <div class="drawer-handle" aria-hidden="true"></div>
     <div id="props-hint" class="props-hint">Select an element<br/>to edit its properties</div>
     <div id="props-content" style="display:none;flex-direction:column;flex:1;">
       <div class="props-header">
@@ -311,6 +429,16 @@ header .spacer{flex:1;}
   </aside>
 
 </div>
+
+<!-- Mobile bottom navigation bar -->
+<nav id="mobile-nav">
+  <button class="mnav-btn" id="mnav-bg"      onclick="openDrawer('bg')"       aria-label="Background"><span class="mnav-icon">&#127774;</span><small>BG</small></button>
+  <button class="mnav-btn" id="mnav-add"     onclick="openDrawer('elements')" aria-label="Add Elements"><span class="mnav-icon">&#65291;</span><small>Add</small></button>
+  <button class="mnav-btn" id="mnav-layers"  onclick="openDrawer('layers')"   aria-label="Layers"><span class="mnav-icon">&#9741;</span><small>Layers</small></button>
+  <button class="mnav-btn" id="mnav-export"  onclick="openDrawer('export')"   aria-label="Export"><span class="mnav-icon">&#8659;</span><small>Export</small></button>
+  <button class="mnav-btn" id="mnav-props"   onclick="openDrawer('props')"    aria-label="Properties"><span class="mnav-icon">&#9998;</span><small>Props</small></button>
+</nav>
+<div id="mobile-backdrop" onclick="closeDrawer()"></div>
 
 <script>
 // ─── BRAND DATA ──────────────────────────────────────────────────────────────
@@ -405,6 +533,39 @@ function initCanvas() {
     wrapper.scrollLeft += fx * nr.width - (e.clientX - nr.left);
     wrapper.scrollTop  += fy * nr.height - (e.clientY - nr.top);
   }, {passive: false});
+
+  // Pinch-to-zoom for mobile
+  (function(){
+    const wrapper = document.getElementById('canvas-wrapper');
+    let lastDist = 0;
+    wrapper.addEventListener('touchstart', function(e){
+      if(e.touches.length === 2){
+        const t0=e.touches[0],t1=e.touches[1];
+        lastDist = Math.hypot(t1.clientX-t0.clientX, t1.clientY-t0.clientY);
+      }
+    },{passive:true});
+    wrapper.addEventListener('touchmove', function(e){
+      if(e.touches.length !== 2) return;
+      const t0=e.touches[0],t1=e.touches[1];
+      const dist = Math.hypot(t1.clientX-t0.clientX, t1.clientY-t0.clientY);
+      if(lastDist > 0){
+        const next = Math.max(0.05, Math.min(3, currentZoom * dist/lastDist));
+        const inner = wrapper.querySelector('.canvas-inner');
+        if(inner){
+          const midX=(t0.clientX+t1.clientX)/2, midY=(t0.clientY+t1.clientY)/2;
+          const r = inner.getBoundingClientRect();
+          const fx=(midX-r.left)/r.width, fy=(midY-r.top)/r.height;
+          applyZoom(next);
+          const nr = inner.getBoundingClientRect();
+          wrapper.scrollLeft += fx*nr.width  - (midX - nr.left);
+          wrapper.scrollTop  += fy*nr.height - (midY - nr.top);
+        } else { applyZoom(next); }
+      }
+      lastDist = dist;
+    },{passive:true});
+    wrapper.addEventListener('touchend',   function(){ lastDist=0; },{passive:true});
+    wrapper.addEventListener('touchcancel',function(){ lastDist=0; },{passive:true});
+  })();
 
   // First slide with default logos
   slides = [{ size: 'feed4x5', bgColor: '#EDEBD3', json: null }];
@@ -828,9 +989,11 @@ function onSelect(e) {
   else renderGenericProps(obj);
 
   updateLayers();
+  if (isMobile()) openDrawer('props');
 }
 
 function onDeselect() {
+  if (isMobile()) closeDrawer();
   document.getElementById('props-hint').style.display = 'flex';
   document.getElementById('props-content').style.display = 'none';
   updateLayers();
@@ -1406,6 +1569,60 @@ function toggleSection(head) {
   const body = head.nextElementSibling;
   body.classList.toggle('open');
 }
+
+// ─── MOBILE RESPONSIVE HELPERS ───────────────────────────────────────────────
+
+function isMobile() { return window.innerWidth <= 768; }
+
+function openDrawer(which) {
+  if (!isMobile()) return;
+  const sidebar    = document.getElementById('sidebar');
+  const propsPanel = document.getElementById('props-panel');
+  const backdrop   = document.getElementById('mobile-backdrop');
+  document.querySelectorAll('.mnav-btn').forEach(b => b.classList.remove('active'));
+  if (which === 'props') {
+    sidebar.classList.remove('drawer-open');
+    propsPanel.classList.add('drawer-open');
+    const btn = document.getElementById('mnav-props');
+    if (btn) btn.classList.add('active');
+  } else {
+    propsPanel.classList.remove('drawer-open');
+    sidebar.classList.add('drawer-open');
+    const sectionMap = { bg:'sec-bg', elements:'sec-elements', layers:'sec-layers', export:'sec-export', size:'sec-size' };
+    const navMap     = { bg:'mnav-bg', elements:'mnav-add', layers:'mnav-layers', export:'mnav-export' };
+    const targetId = sectionMap[which];
+    if (targetId) {
+      requestAnimationFrame(() => {
+        const target = document.getElementById(targetId);
+        if (target) sidebar.scrollTo({ top: target.offsetTop - 4, behavior: 'smooth' });
+      });
+    }
+    const btnId = navMap[which];
+    if (btnId) { const btn = document.getElementById(btnId); if (btn) btn.classList.add('active'); }
+  }
+  backdrop.classList.add('visible');
+}
+
+function closeDrawer() {
+  document.getElementById('sidebar').classList.remove('drawer-open');
+  document.getElementById('props-panel').classList.remove('drawer-open');
+  document.getElementById('mobile-backdrop').classList.remove('visible');
+  document.querySelectorAll('.mnav-btn').forEach(b => b.classList.remove('active'));
+}
+
+window.addEventListener('orientationchange', () => {
+  closeDrawer();
+  setTimeout(() => fitToScreen(), 250);
+});
+
+window.addEventListener('resize', () => {
+  if (!isMobile()) {
+    document.getElementById('sidebar').classList.remove('drawer-open');
+    document.getElementById('props-panel').classList.remove('drawer-open');
+    document.getElementById('mobile-backdrop').classList.remove('visible');
+  }
+  fitToScreen();
+});
 </script>
 </body>
 </html>
